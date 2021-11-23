@@ -153,8 +153,23 @@ for patient in os.listdir(lab_results_directory):
 		# Then reconstruct big dataframe by composition
 
 		# OPTION 1
-		data.drop_duplicates( ['Parameter', 'Datum'], keep = 'first', inplace = True  ) # <------------------------ to improve: allow choice of value to keep
-		data.reset_index(inplace = True, drop = True)
+		#data.drop_duplicates( ['Parameter', 'Datum'], keep = 'first', inplace = True, ignore_index = True  ) # <------------------------ to improve: allow choice of value to keep
+		for p in set(data.Parameter):
+			df_specific_for_p = data.loc[ data.Parameter == p ]
+
+			# https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html
+			boolean_duplicated_series = df_specific_for_p.duplicated( ['Parameter', 'Datum'], keep = False )
+
+			if( boolean_duplicated_series.any() ):
+				df_duplicated_p = df_specific_for_p[boolean_duplicated_series]
+				print()
+				print(df_duplicated_p)
+				s = f'\nThere are more exams for {p} taken on the same day. Type index to KEEP: '
+				I = input(s)
+				
+				for i in df_specific_for_p.index:
+					if str(i) != str(I):
+						data.drop(i, inplace = True)
 		# END GETTING RID OF DUPLICATE EXAM
 
 		# END MANIPULATING DATAFRAME

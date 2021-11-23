@@ -6,6 +6,6 @@ MANUAL OPERATIONS DONE
 
 AUTOMATIC
 
-- Handles multiple exams on the same day, keeping first
+- Handles multiple exams on the same day, allowing to choose the one to keep
 
 - Automatically gets rid of kein material
