@@ -5,7 +5,8 @@ import numpy as np
 import xarray as xr
 
 
-current_patient_one = 20 # <------------ TO UPDATE EVERY TIME PROGRAM IS USED
+# current_patient_one = int(input('Which is the number of the first patient? '))  # <------------ TO UPDATE EVERY TIME PROGRAM IS USED
+current_patient_one = 5
 
 num_max_days = 20
 
@@ -14,8 +15,17 @@ lab_results_directory = './lab_results'
 # <---------------------------------------------------- the parameters marked red in the numbers sheet must be added?
 # This contains all 29 parameters in the order or Rebecca's work sheet; those marked red have -temp names, meaning I could not find them in lab sheet.
 # Must find a lab sheet that contains them, and see how they are called
-all_needed_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE)', 'Calcium', 'Kreatinin', 'Proenkephalin', 'GFR, CKD-EPI', 'Harnstoff', 'Glucose', 'LDH', 'GOT/AST', 'GPT/ALT', 'AP', 'GGT', 'bili-temp', 'Phosphat', 'Ges.Eiweiss', 'Albumin quant.', 'CRP', 'Leukozyten', 'Hb', 'Thrombozyten', 'ntpro-temp', 'tnt-temp', 'INR - ber.', 'Quick', 'aPTT', 'ipth-temp']
-#all_needed_parameters =['a', 'b', 'c']
+
+# TEST
+# all_needed_parameters =['a', 'b', 'c']
+
+# FIRST 29
+first_29_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE)', 'Calcium', 'Kreatinin', 'Proenkephalin', 'GFR, CKD-EPI', 'Harnstoff', 'Glucose', 'LDH', 'GOT/AST', 'GPT/ALT', 'AP', 'GGT', 'bili-temp', 'Phosphat', 'Ges.Eiweiss', 'Albumin quant.', 'CRP', 'Leukozyten', 'Hb', 'Thrombozyten', 'ntpro-temp', 'tnt-temp', 'INR - ber.', 'Quick', 'aPTT', 'ipth-temp']
+
+# NEW 17
+new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
+
+all_needed_parameters = first_29_parameters + new_17_parameters
 
 big_data = [  ]
 num_patients = 0
@@ -51,6 +61,7 @@ for patient in os.listdir(lab_results_directory):
 		# Merge into single
 		# ignore_index makes index range from 0 to n-1 rather than keeping original indice; dropna() drops rows with NaN
 		data = pd.concat( [data1, data2], ignore_index=True ).dropna()
+
 
 		# Print full dataframe
 		pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -123,7 +134,7 @@ for patient in os.listdir(lab_results_directory):
 		# <------------------------------------------------------------------------- This raises error if something is left in results column which is not a number, as +, - poisitiv, negativ, kein material, ...
 		# Ask Rebecca whether such results can appear in the parameters she needs, and start by getting rid of k.m.
 		#print(data)
-		# START GETTING RID OF kein material ROWS
+		#START GETTING RID OF kein material ROWS
 		strings_to_kill = ['Kein Material', 'K.Mat.']
 		for s in strings_to_kill:
 			index_to_kill = data.index[ data.Wert == s ]
@@ -135,7 +146,8 @@ for patient in os.listdir(lab_results_directory):
 
 
 		# Set values as float; if not (i.e. if strinsg) the xarray is messed up bc/ interpretes 7.21 as '7', '.', '2', '1'
-		data = data.astype({"Wert": float}) # <-------------------------------------- this raises error if values are (incorrectly) interpreted by excel as dates. Temp fix by setting text type in excel
+		# data = data.astype({"Wert": float}) # <-------------------------------------- this raises error if values are (incorrectly) interpreted by excel as dates. Temp fix by setting text type in excel
+		data = data.astype({"Wert": str}) # <-------------------------------------- this raises error if values are (incorrectly) interpreted by excel as dates. Temp fix by setting text type in excel
 
 
 		# START GETTING RID OF DUPLICATE EXAM <------------------------------------------------------------------------------------------------- WORKING HERE.
