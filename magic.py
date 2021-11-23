@@ -96,9 +96,6 @@ for patient in os.listdir(lab_results_directory):
 		# Which is a mess because data.colum[i] refers to that index. So need to reset.
 		data.reset_index(inplace = True, drop = True)
 
-
-		# <<<<<<<<<<<------------------------------------- not sure why need try/except (without there is error), may be because param may appear more than once and it's dropped everywhere
-
 		# Now not needed parameters are dropped from data.Parameter. It may still happen that a needed parameter is not present in result. Fixed later. 
 
 		# drop norm column
@@ -137,8 +134,6 @@ for patient in os.listdir(lab_results_directory):
 		# END GETTING RID OF kein material ROWS
 
 
-		
-
 		# Set values as float; if not (i.e. if strinsg) the xarray is messed up bc/ interpretes 7.21 as '7', '.', '2', '1'
 		data = data.astype({"Wert": float}) # <-------------------------------------- this raises error if values are (incorrectly) interpreted by excel as dates. Temp fix by setting text type in excel
 
@@ -170,6 +165,9 @@ for patient in os.listdir(lab_results_directory):
 				for i in df_specific_for_p.index:
 					if str(i) != str(I):
 						data.drop(i, inplace = True)
+						
+		data.reset_index(inplace = True, drop = True)
+
 		# END GETTING RID OF DUPLICATE EXAM
 
 		# END MANIPULATING DATAFRAME
