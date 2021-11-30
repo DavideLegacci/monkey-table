@@ -5,12 +5,16 @@ import numpy as np
 import xarray as xr
 
 
-# current_patient_one = int(input('Which is the number of the first patient? '))  # <------------ TO UPDATE EVERY TIME PROGRAM IS USED
-current_patient_one = 5
+current_patient_one = int(input('Which is the number of the first patient? ')) 
 
-num_max_days = 20
+empty_result = ''
+positive_result = 1
+negative_result = ''
+
+####################################################################################################################################################################################
 
 lab_results_directory = './lab_results'
+num_max_days = 23
 
 # <---------------------------------------------------- the parameters marked red in the numbers sheet must be added?
 # This contains all 29 parameters in the order or Rebecca's work sheet; those marked red have -temp names, meaning I could not find them in lab sheet.
@@ -124,25 +128,38 @@ for patient in os.listdir(lab_results_directory):
 		data['Datum'] = pd.to_datetime(data['Datum'], dayfirst = True)
 
 
-		# Fix values: get rid of !L and !H flags
-		for i in range(len(data.Wert)):
-			if type( data.at[i, 'Wert'] ) is str:
-				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace(' !L', '')
-				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace(' !H', '')
+
 
 
 		# <------------------------------------------------------------------------- This raises error if something is left in results column which is not a number, as +, - poisitiv, negativ, kein material, ...
 		# Ask Rebecca whether such results can appear in the parameters she needs, and start by getting rid of k.m.
 		#print(data)
 		#START GETTING RID OF kein material ROWS
-		strings_to_kill = ['Kein Material', 'K.Mat.']
-		for s in strings_to_kill:
-			index_to_kill = data.index[ data.Wert == s ]
-			[ print(f"---------------Dropping {s} for {data.at[ i , 'Parameter']}") for i in list(index_to_kill) ]
-			data.drop(index_to_kill, inplace = True)
+		# strings_to_kill = ['Kein Material', 'K.Mat.']
+		# for s in strings_to_kill:
+		# 	index_to_kill = data.index[ data.Wert == s ]
+		# 	[ print(f"---------------Dropping {s} for {data.at[ i , 'Parameter']}") for i in list(index_to_kill) ]
+		# 	data.drop(index_to_kill, inplace = True)
 
-		data.reset_index(inplace = True, drop = True)
+		# data.reset_index(inplace = True, drop = True)
 		# END GETTING RID OF kein material ROWS
+
+		# NON STANDARD RESULTS
+		# + and positive to 1
+		# - and negative to empty
+		# anything else remains text
+
+
+		# Get rid of !L and !H flags
+		for i in range(len(data.Wert)):
+			if type( data.at[i, 'Wert'] ) is str:
+				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace(' !L', '')
+				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace(' !H', '')
+				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace('negativ', negative_result)
+				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace('-', negative_result)
+				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace('positiv', positive_result)
+				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace('+', positive_result)
+		# END NON STANDARD RESULTS
 
 
 		# Set values as float; if not (i.e. if strinsg) the xarray is messed up bc/ interpretes 7.21 as '7', '.', '2', '1'
@@ -254,19 +271,19 @@ for patient in os.listdir(lab_results_directory):
 				final_dictionary[p] = [get_results(p), get_dates(p)]
 
 			elif p in parameters_needed_but_not_available_from_lab:
-				final_dictionary[p] = [ ['-' for _ in range(num_max_days)] , 0 ]
+				final_dictionary[p] = [ [empty_result for _ in range(num_max_days)] , 0 ]
 
 			else:
 				raise Exception('Something wrong')
 
 
-		# Add '-' in day when exam is not done
+		# Add empty in day when exam is not done
 		for p in parameters_needed_and_available_from_lab:
 			results, dates = final_dictionary[p]
 			if len(results) < num_max_days:
 				for i in range(num_max_days):
 					if period[i] not in dates:
-							results.insert(i,'-')
+							results.insert(i,empty_result)
 
 
 		# Collect all results
