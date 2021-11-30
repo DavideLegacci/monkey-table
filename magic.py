@@ -7,7 +7,6 @@ import xarray as xr
 
 current_patient_one = int(input('\nWhich is the number of the first patient? Type a number and hit enter:  '))
 
-
 keep_kein_material = ''
 while keep_kein_material not in ['y', 'n']:
 	keep_kein_material = input("\nShould I keep 'Kein Material' results? Type y or n: ")
