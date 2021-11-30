@@ -5,11 +5,18 @@ import numpy as np
 import xarray as xr
 
 
-current_patient_one = int(input('\nWhich is the number of the first patient? Type a number and hit enter:  '))
+mode = 'test'
+# mode = 'full'
 
-keep_kein_material = ''
-while keep_kein_material not in ['y', 'n']:
-	keep_kein_material = input("\nShould I keep 'Kein Material' results? Type y or n: ")
+if mode == 'full':
+	current_patient_one = int(input('\nWhich is the number of the first patient? Type a number and hit enter:  '))
+	keep_kein_material = ''
+	while keep_kein_material not in ['y', 'n']:
+		keep_kein_material = input("\nShould I keep 'Kein Material' results? Type y or n: ")
+
+elif mode == 'test':
+	current_patient_one = 5
+	keep_kein_material = 'n'
 
 empty_result = ''
 positive_result = '1'
@@ -18,10 +25,11 @@ negative_result = ''
 ####################################################################################################################################################################################
 
 lab_results_directory = './lab_results'
-num_max_days = 23
-sub_period_duration = 7
+num_max_days = 18
+sub_period_duration = 5
 
 def period_maker():
+	'''Returns [7, 7, 7, 2] if num_max_days = 23 and sub_period_duration = 7'''
 	if num_max_days < sub_period_duration:
 		raise Exception('First input must be >= second')
 	num_full_sub_periods = int(num_max_days/sub_period_duration)
@@ -30,14 +38,27 @@ def period_maker():
 	if days_in_final_subperiod != 0: period_list = period_list +[days_in_final_subperiod]
 	return period_list
 
-period_list = period_maker()
+def data_splitter(data):
+	'''Given data of lenght num_max_days splits it according to period_maker
+
+	e.g. num_max_days = 11
+	sub_period_duration = 3
+	period_list = period_maker() returns [3, 3, 3, 2]
+	data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+	data_splitter(data, period_list ) returns [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11]
+
+	'''
+	period_list = period_maker()
+	helper = [sum(period_list[:i]) for i in range(len(period_list)+1)]
+	return [  data[helper[i]:helper[i+1]] for i in range(len(helper)-1) ]
 
 # <---------------------------------------------------- the parameters marked red in the numbers sheet must be added?
 # This contains all 29 parameters in the order or Rebecca's work sheet; those marked red have -temp names, meaning I could not find them in lab sheet.
 # Must find a lab sheet that contains them, and see how they are called
 
 # TEST
-# all_needed_parameters =['a', 'b', 'c']
+
 
 # FIRST 29
 first_29_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE)', 'Calcium', 'Kreatinin', 'Proenkephalin', 'GFR, CKD-EPI', 'Harnstoff', 'Glucose', 'LDH', 'GOT/AST', 'GPT/ALT', 'AP', 'GGT', 'bili-temp', 'Phosphat', 'Ges.Eiweiss', 'Albumin quant.', 'CRP', 'Leukozyten', 'Hb', 'Thrombozyten', 'ntpro-temp', 'tnt-temp', 'INR - ber.', 'Quick', 'aPTT', 'ipth-temp']
@@ -45,7 +66,11 @@ first_29_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE
 # NEW 17
 new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
 
-all_needed_parameters = first_29_parameters + new_17_parameters
+if mode == 'full':
+	all_needed_parameters = first_29_parameters + new_17_parameters
+
+elif mode == 'test':
+	all_needed_parameters =['a', 'b', 'c']
 
 big_data = [  ]
 num_patients = 0
@@ -86,6 +111,7 @@ for patient in os.listdir(lab_results_directory):
 		# Print full dataframe
 		pd.set_option("display.max_rows", None, "display.max_columns", None)
 		# END MERGING DATAFRAME
+
 
 
 		# THIS IS INCLUDED IN CYCLE BELOW: IF PARAM NOT IN ALL_NEEDED_PARAMATERS, DROP IT
@@ -129,8 +155,11 @@ for patient in os.listdir(lab_results_directory):
 
 		# Now not needed parameters are dropped from data.Parameter. It may still happen that a needed parameter is not present in result. Fixed later. 
 
+
 		# drop norm column
 		data.drop('Normb / Dimension', axis = 1, inplace = True)
+
+
 
 		# Fix dates format
 		for i in range(len(data.Datum)):
@@ -142,8 +171,6 @@ for patient in os.listdir(lab_results_directory):
 
 		# Convert to datetime. Those that already are, are not affected
 		data['Datum'] = pd.to_datetime(data['Datum'], dayfirst = True)
-
-
 
 
 
@@ -221,8 +248,6 @@ for patient in os.listdir(lab_results_directory):
 
 		# CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------ temporary
 		# Get patient day0 = when she enters hospital
-
-		print(data)
 
 		day0 = min(data.Datum)
 
@@ -309,6 +334,7 @@ for patient in os.listdir(lab_results_directory):
 		patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
 		big_data.append(patient_results)
 
+		print()
 		print(data)
 		print()
 		print(final_dictionary)
