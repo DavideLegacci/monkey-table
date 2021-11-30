@@ -5,16 +5,33 @@ import numpy as np
 import xarray as xr
 
 
-current_patient_one = int(input('Which is the number of the first patient? ')) 
+current_patient_one = int(input('\nWhich is the number of the first patient? Type a number and hit enter:  '))
+
+
+keep_kein_material = ''
+while keep_kein_material not in ['y', 'n']:
+	keep_kein_material = input("\nShould I keep 'Kein Material' results? Type y or n: ")
 
 empty_result = ''
-positive_result = 1
+positive_result = '1'
 negative_result = ''
 
 ####################################################################################################################################################################################
 
 lab_results_directory = './lab_results'
 num_max_days = 23
+sub_period_duration = 7
+
+def period_maker():
+	if num_max_days < sub_period_duration:
+		raise Exception('First input must be >= second')
+	num_full_sub_periods = int(num_max_days/sub_period_duration)
+	days_in_final_subperiod = num_max_days % sub_period_duration
+	period_list = [sub_period_duration for _ in range(num_full_sub_periods)]
+	if days_in_final_subperiod != 0: period_list = period_list +[days_in_final_subperiod]
+	return period_list
+
+period_list = period_maker()
 
 # <---------------------------------------------------- the parameters marked red in the numbers sheet must be added?
 # This contains all 29 parameters in the order or Rebecca's work sheet; those marked red have -temp names, meaning I could not find them in lab sheet.
@@ -135,20 +152,21 @@ for patient in os.listdir(lab_results_directory):
 		# Ask Rebecca whether such results can appear in the parameters she needs, and start by getting rid of k.m.
 		#print(data)
 		#START GETTING RID OF kein material ROWS
-		# strings_to_kill = ['Kein Material', 'K.Mat.']
-		# for s in strings_to_kill:
-		# 	index_to_kill = data.index[ data.Wert == s ]
-		# 	[ print(f"---------------Dropping {s} for {data.at[ i , 'Parameter']}") for i in list(index_to_kill) ]
-		# 	data.drop(index_to_kill, inplace = True)
+		if keep_kein_material == 'n':
+			strings_to_kill = ['Kein Material', 'K.Mat.']
+			for s in strings_to_kill:
+				index_to_kill = data.index[ data.Wert == s ]
+				[ print(f"---------------Dropping {s} for {data.at[ i , 'Parameter']}") for i in list(index_to_kill) ]
+				data.drop(index_to_kill, inplace = True)
 
-		# data.reset_index(inplace = True, drop = True)
+			data.reset_index(inplace = True, drop = True)
+
 		# END GETTING RID OF kein material ROWS
 
 		# NON STANDARD RESULTS
 		# + and positive to 1
 		# - and negative to empty
 		# anything else remains text
-
 
 		# Get rid of !L and !H flags
 		for i in range(len(data.Wert)):
@@ -204,6 +222,8 @@ for patient in os.listdir(lab_results_directory):
 
 		# CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------ temporary
 		# Get patient day0 = when she enters hospital
+
+		print(data)
 
 		day0 = min(data.Datum)
 
@@ -289,6 +309,12 @@ for patient in os.listdir(lab_results_directory):
 		# Collect all results
 		patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
 		big_data.append(patient_results)
+
+		print(data)
+		print()
+		print(final_dictionary)
+		print()
+		print(big_data)
 
 
 # END PATIENT
