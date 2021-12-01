@@ -1,12 +1,13 @@
 import pandas as pd
 import os
+import time
 from datetime import datetime
 import numpy as np
 import xarray as xr
 
 
-mode = 'test'
-# mode = 'full'
+# mode = 'test'
+mode = 'full'
 
 if mode == 'full':
 	current_patient_one = int(input('\nWhich is the number of the first patient? Type a number and hit enter:  '))
@@ -27,6 +28,9 @@ negative_result = ''
 lab_results_directory = './lab_results'
 num_max_days = 23
 sub_period_duration = 7
+
+current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
+
 
 def period_maker():
 	'''Returns [7, 7, 7, 2] if num_max_days = 23 and sub_period_duration = 7'''
@@ -52,6 +56,11 @@ def data_splitter(data):
 	period_list = period_maker()
 	helper = [sum(period_list[:i]) for i in range(len(period_list)+1)]
 	return [  data[helper[i]:helper[i+1]] for i in range(len(helper)-1) ]
+
+all_days = [_ for _ in range(num_max_days)]
+split_days = data_splitter(all_days)
+print(split_days)
+
 
 def dictionary_values_splitter(dictionary_to_split):
 	return { k:data_splitter(v) for k,v in dictionary_to_split.items() }
@@ -341,15 +350,10 @@ for patient in os.listdir(lab_results_directory):
 
 
 		# Collect all results; here final dictionary still contains dates, and [0] gets rid of it
-		patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
-		big_data.append(patient_results)
+		# patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
+		# big_data.append(patient_results)
 
-		print()
-		print(data)
-		print()
-		
-		print()
-		print(big_data)
+
 
 		# Make dictionaries for multiple sheets
 		final_dictionary_without_dates = { k:v[0] for k,v in final_dictionary.items() }
@@ -358,20 +362,41 @@ for patient in os.listdir(lab_results_directory):
 		list_of_patient_dictionaries = dict_of_lists_to_list_of_dicts( dictionary_values_splitter( final_dictionary_without_dates ) )
 
 		for s in range(number_of_sheets):
-			big_data_multiple_sheets[s].append(  )
+			big_data_multiple_sheets[s].append( list(list_of_patient_dictionaries[s].values()) )
+
+		# each element of big_data_multiple_sheets is to be treated as big_data
 
 
 # END PATIENT
 # print(big_data)
 
 dims = ['patient', 'parameter', 'day']
-coords = {'patient':range(current_patient_one, current_patient_one+num_patients), 'parameter':all_needed_parameters, 'day':range(num_max_days)} # dict-like
 
-data = xr.DataArray(big_data, dims = dims, coords = coords )
-df = data.to_dataframe('value')
-df = data.to_series().unstack(level=[1,2])
-with pd.ExcelWriter("new.xlsx") as writer: 
-    df.to_excel(writer)
+
+
+def save_excel_sheet(df, dirname, filename, sheetname):
+
+	filepath = f'{dirname}/{filename}'
+	os.makedirs(dirname, exist_ok=True)
+
+	if not os.path.exists(filepath):
+		with pd.ExcelWriter(filepath) as writer:
+			df.to_excel(writer, sheet_name=sheetname)
+	else:
+		with pd.ExcelWriter(filepath, engine='openpyxl', mode='a') as writer:
+			df.to_excel(writer, sheet_name=sheetname)
+
+
+
+for s in range(number_of_sheets):
+	coords = {'patient':range(current_patient_one, current_patient_one+num_patients), 'parameter':all_needed_parameters, 'day':split_days[s] }
+	data = xr.DataArray(big_data_multiple_sheets[s], dims = dims, coords = coords )
+	df = data.to_dataframe('value')
+	df = data.to_series().unstack(level=[1,2])
+
+	filename = f'{current_patient_one}-{current_patient_one+num_patients-1}-{current_date}.xlsx'
+
+	save_excel_sheet(df, 'COMPILED-SHEETS', filename, f'Sheet{s+1}')
 
 
 print('\nALL GOOD :)\n')
