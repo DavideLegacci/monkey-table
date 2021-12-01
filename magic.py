@@ -78,12 +78,14 @@ if mode == 'full':
 elif mode == 'test':
 	all_needed_parameters =['a', 'b', 'c']
 
-big_data = [  ]
+# big_data = [  ]
 num_patients = 0
 
 # Multiple sheets
-big_data_multiple_sheets = []
+
 number_of_sheets = int(num_max_days/sub_period_duration) + 1
+
+big_data_multiple_sheets = [  [ ] for _ in range(number_of_sheets)  ]
 
 # print
 
@@ -338,7 +340,7 @@ for patient in os.listdir(lab_results_directory):
 							results.insert(i,empty_result)
 
 
-		# Collect all results; here final dictionary still contains dates
+		# Collect all results; here final dictionary still contains dates, and [0] gets rid of it
 		patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
 		big_data.append(patient_results)
 
@@ -351,11 +353,12 @@ for patient in os.listdir(lab_results_directory):
 
 		# Make dictionaries for multiple sheets
 		final_dictionary_without_dates = { k:v[0] for k,v in final_dictionary.items() }
+
+		# This list contains as many dictionaries as number of sheets, each to be treated as final_dictionary
 		list_of_patient_dictionaries = dict_of_lists_to_list_of_dicts( dictionary_values_splitter( final_dictionary_without_dates ) )
-		print()
-		print(final_dictionary)
-		print()
-		print(list_of_patient_dictionaries)
+
+		for s in range(number_of_sheets):
+			big_data_multiple_sheets[s].append(  )
 
 
 # END PATIENT
