@@ -25,8 +25,8 @@ negative_result = ''
 ####################################################################################################################################################################################
 
 lab_results_directory = './lab_results'
-num_max_days = 18
-sub_period_duration = 5
+num_max_days = 23
+sub_period_duration = 7
 
 def period_maker():
 	'''Returns [7, 7, 7, 2] if num_max_days = 23 and sub_period_duration = 7'''
@@ -46,12 +46,18 @@ def data_splitter(data):
 	period_list = period_maker() returns [3, 3, 3, 2]
 	data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
-	data_splitter(data, period_list ) returns [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11]
+	data_splitter(data) returns [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11]]
 
 	'''
 	period_list = period_maker()
 	helper = [sum(period_list[:i]) for i in range(len(period_list)+1)]
 	return [  data[helper[i]:helper[i+1]] for i in range(len(helper)-1) ]
+
+def dictionary_values_splitter(dictionary_to_split):
+	return { k:data_splitter(v) for k,v in dictionary_to_split.items() }
+
+def dict_of_lists_to_list_of_dicts(dict_of_lists):
+	return [ dict(zip(dict_of_lists, i)) for i in zip(*dict_of_lists.values()) ]
 
 # <---------------------------------------------------- the parameters marked red in the numbers sheet must be added?
 # This contains all 29 parameters in the order or Rebecca's work sheet; those marked red have -temp names, meaning I could not find them in lab sheet.
@@ -75,7 +81,9 @@ elif mode == 'test':
 big_data = [  ]
 num_patients = 0
 
-
+# Multiple sheets
+big_data_multiple_sheets = []
+number_of_sheets = int(num_max_days/sub_period_duration) + 1
 
 # print
 
@@ -330,16 +338,24 @@ for patient in os.listdir(lab_results_directory):
 							results.insert(i,empty_result)
 
 
-		# Collect all results
+		# Collect all results; here final dictionary still contains dates
 		patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
 		big_data.append(patient_results)
 
 		print()
 		print(data)
 		print()
-		print(final_dictionary)
+		
 		print()
 		print(big_data)
+
+		# Make dictionaries for multiple sheets
+		final_dictionary_without_dates = { k:v[0] for k,v in final_dictionary.items() }
+		list_of_patient_dictionaries = dict_of_lists_to_list_of_dicts( dictionary_values_splitter( final_dictionary_without_dates ) )
+		print()
+		print(final_dictionary)
+		print()
+		print(list_of_patient_dictionaries)
 
 
 # END PATIENT
