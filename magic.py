@@ -72,8 +72,7 @@ for raw_result in os.listdir(lab_results_raw_directory):
 
 # Merge into single
 raw_df = pd.concat( raw_data )
-print(raw_df)
-#raw_df.sort_values('PATIFALLNR', inplace = True)
+
 
 print('Generating excel file for each patient...\n')
 for patient in tqdm(set(raw_df.PATIFALLNR)):
@@ -83,7 +82,7 @@ for patient in tqdm(set(raw_df.PATIFALLNR)):
 	filename = f'{patient}.xlsx'
 	save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
 
-print('\nALL GOOD :)\n Starting data manipulation...')
+input('\nALL GOOD :)\n Starting data manipulation...')
 
 
 ####################################################################################################################################################################################
@@ -148,7 +147,7 @@ first_29_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE
 # NEW 17
 new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
 
-testing_parameters = ['Plattenepithelien im Urin, absolut', 'Urobilinogen im Urin (Teststreifen)', 'pH-Wert im Urin (Teststreifen)', 'International Normalized Ratio (INR)-berechnet', 'partielle Thromboplastinzeit, aktiviert (aPTT)', 'Quick']
+testing_parameters = ['Phosphat','Plattenepithelien im Urin, absolut', 'Urobilinogen im Urin (Teststreifen)', 'pH-Wert im Urin (Teststreifen)', 'International Normalized Ratio (INR)-berechnet', 'partielle Thromboplastinzeit, aktiviert (aPTT)', 'Quick']
 
 if mode == 'full':
 	all_needed_parameters = testing_parameters # first_29_parameters + new_17_parameters
@@ -161,6 +160,7 @@ elif mode == 'test':
 
 # big_data = [  ]
 num_patients = 0
+patient_identifier_ids = []
 
 # Multiple sheets
 
@@ -168,7 +168,7 @@ number_of_sheets = int(num_max_days/sub_period_duration) + 1
 
 big_data_multiple_sheets = [  [ ] for _ in range(number_of_sheets)  ]
 
-# print
+
 
 # START PATIENT
 
@@ -178,7 +178,8 @@ for patient in os.listdir(lab_results_directory):
 	if patient.endswith(".xlsx") and not patient.startswith("~"):
 
 		num_patients +=1
-		print(patient)
+		#patient_identifier_ids.append(patient)
+		print(f'processing patient {patient}...')
 
 		# START MERGING DATAFRAME
 		# Read data into two df
@@ -194,7 +195,7 @@ for patient in os.listdir(lab_results_directory):
 		# https://stackoverflow.com/questions/18172851/deleting-dataframe-row-in-pandas-based-on-column-value
 		for param in data.BESCHREIBUNG:
 			if param not in all_needed_parameters:
-				print(f'{param} being dropped \n')
+				#print(f'{param} being dropped \n')
 				data.drop(data.index[ data.BESCHREIBUNG == param ], inplace = True) 
 
 				# Should be allright without this
@@ -216,12 +217,12 @@ for patient in os.listdir(lab_results_directory):
 
 
 		# Fix dates format
-		# for i in range(len(data.Datum)):
+		# for i in range(len(data.VALIDIERTDAT)):
 
 		# 	# Some dates were recognized by pandas already as datetimes; other are still strings because 1. they contain spaces and 2. they contain . rather than /
-		# 	if type( data.at[i, 'Datum'] ) is str:
-		# 		data.at[i, 'Datum'] = data.at[i, 'Datum'].replace(' ', '')
-		# 		data.at[i, 'Datum'] = data.at[i, 'Datum'].replace('.', '/')	
+		# 	if type( data.at[i, 'VALIDIERTDAT'] ) is str:
+		# 		data.at[i, 'VALIDIERTDAT'] = data.at[i, 'VALIDIERTDAT'].replace(' ', '')
+		# 		data.at[i, 'VALIDIERTDAT'] = data.at[i, 'VALIDIERTDAT'].replace('.', '/')	
 
 		# Convert to datetime
 		data['VALIDIERTDAT'] = pd.to_datetime(data['VALIDIERTDAT'], dayfirst = True)
@@ -259,12 +260,6 @@ for patient in os.listdir(lab_results_directory):
 
 		data = data.astype({"ERGEBNIST": str})
 
-		print(data)
-
-
-
-
-
 		# START GETTING RID OF DUPLICATE EXAM 
 		# POSSIBILITIES:
 		
@@ -275,7 +270,7 @@ for patient in os.listdir(lab_results_directory):
 		# Then reconstruct big dataframe by composition
 
 		# OPTION 1
-		#data.drop_duplicates( ['Parameter', 'Datum'], keep = 'first', inplace = True, ignore_index = True  ) # <------------------------ to improve: allow choice of value to keep
+		#data.drop_duplicates( ['Parameter', 'VALIDIERTDAT'], keep = 'first', inplace = True, ignore_index = True  ) # <------------------------ to improve: allow choice of value to keep
 		for p in set(data.BESCHREIBUNG):
 			df_specific_for_p = data.loc[ data.BESCHREIBUNG == p ]
 
@@ -302,17 +297,15 @@ for patient in os.listdir(lab_results_directory):
 		#- the first of the day
 		## -------------------------------------------------------------------------------------
 		# END MANIPULATING DATAFRAME
-		print(data)
-		print(j)
 
 
 		# CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------ temporary
 		# Get patient day0 = when she enters hospital
 
-		day0 = min(data.Datum)
+		day0 = min(data.VALIDIERTDAT)
 
 		# Get range of time in which exams are taken
-		day_first_exam, day_last_exam = min(data.Datum), max(data.Datum)
+		day_first_exam, day_last_exam = min(data.VALIDIERTDAT), max(data.VALIDIERTDAT)
 		exam_period = day_last_exam - day_first_exam
 		# print(exam_period)
 
@@ -341,7 +334,7 @@ for patient in os.listdir(lab_results_directory):
 		# 		data.drop(parameter, axis = 0, inplace = True)
 
 
-		# data.sort_values(by=['Datum'], inplace = True) # <-------------------------------------------------------- this should not really be necessary, is it? 
+		# data.sort_values(by=['VALIDIERTDAT'], inplace = True) # <-------------------------------------------------------- this should not really be necessary, is it? 
 		# print(f'\nSorted by date \n {data}\n')
 
 		# Start building dictionary
@@ -358,16 +351,16 @@ for patient in os.listdir(lab_results_directory):
 		# def get_dates(parameter):
 		# 	try:
 		# 		# if there is more than one result
-		# 		return list(data.loc[parameter].Datum)
+		# 		return list(data.loc[parameter].VALIDIERTDAT)
 		# 	except:
 		# 		# if there is only one result
-		# 		return [data.loc[parameter].Datum]
+		# 		return [data.loc[parameter].VALIDIERTDAT]
 
 		def get_results(parameter):
 			return list(data[data.BESCHREIBUNG == parameter].ERGEBNIST)
 
 		def get_dates(parameter):
-			return list(data[data.BESCHREIBUNG == parameter].Datum)
+			return list(data[data.BESCHREIBUNG == parameter].VALIDIERTDAT)
 
 		final_dictionary = {}
 		for p in all_needed_parameters:
@@ -407,6 +400,8 @@ for patient in os.listdir(lab_results_directory):
 
 		# each element of big_data_multiple_sheets is to be treated as big_data
 
+		patient_identifier_ids.append(data['PATIFALLNR'][0])
+
 
 ####################################################################################################################################################################################
 # END DATA MANIPULATION ROUTINE FOR EACH PATIENT
@@ -418,7 +413,6 @@ for patient in os.listdir(lab_results_directory):
 
 
 dims = ['patient', 'parameter', 'day']
-
 
 def save_excel_sheet(df, dirname, filename, sheetname):
 
@@ -435,12 +429,14 @@ def save_excel_sheet(df, dirname, filename, sheetname):
 
 
 for s in range(number_of_sheets):
-	coords = {'patient':range(current_patient_one, current_patient_one+num_patients), 'parameter':all_needed_parameters, 'day':split_days[s] }
+	#coords = {'patient':range(current_patient_one, current_patient_one+num_patients), 'parameter':all_needed_parameters, 'day':split_days[s] }
+	coords = {'patient':patient_identifier_ids, 'parameter':all_needed_parameters, 'day':split_days[s] }
 	data = xr.DataArray(big_data_multiple_sheets[s], dims = dims, coords = coords )
 	df = data.to_dataframe('value')
 	df = data.to_series().unstack(level=[1,2])
 
-	filename = f'{current_patient_one}-{current_patient_one+num_patients-1}-{current_date}.xlsx'
+	# filename = f'{current_patient_one}-{current_patient_one+num_patients-1}-{current_date}.xlsx'
+	filename = f'{current_date}.xlsx'
 
 	save_excel_sheet(df, 'COMPILED-SHEETS', filename, f'Sheet{s+1}')
 
