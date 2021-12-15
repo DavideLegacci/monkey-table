@@ -229,11 +229,6 @@ for patient in os.listdir(lab_results_directory):
 		# Add column only with info about day
 		data = data.assign(DAY=data['VALIDIERTDAT'].dt.strftime('%Y-%m-%d'))
 
-
-
-		# <------------------------------------------------------------------------- This raises error if something is left in results column which is not a number, as +, - poisitiv, negativ, kein material, ...
-		# Ask Rebecca whether such results can appear in the parameters she needs, and start by getting rid of k.m.
-		#print(data)
 		#START GETTING RID OF kein material ROWS
 		if keep_kein_material == 'n':
 			strings_to_kill = ['Kein Material', 'K.Mat.']
@@ -265,7 +260,7 @@ for patient in os.listdir(lab_results_directory):
 		data = data.astype({"ERGEBNIST": str})
 
 		print(data)
-		print(j)
+
 
 
 
@@ -285,7 +280,7 @@ for patient in os.listdir(lab_results_directory):
 			df_specific_for_p = data.loc[ data.BESCHREIBUNG == p ]
 
 			# https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html
-			boolean_duplicated_series = df_specific_for_p.duplicated( ['BESCHREIBUNG', 'Datum'], keep = False )
+			boolean_duplicated_series = df_specific_for_p.duplicated( ['BESCHREIBUNG', 'DAY'], keep = False )
 
 			if( boolean_duplicated_series.any() ):
 				df_duplicated_p = df_specific_for_p[boolean_duplicated_series]
@@ -300,9 +295,15 @@ for patient in os.listdir(lab_results_directory):
 						
 		data.reset_index(inplace = True, drop = True)
 
-		# END GETTING RID OF DUPLICATE EXAM
+		# END GETTING RID OF DUPLICATE EXAM # ----------
 
+		## IMPROVED DUPLICATED ALGORITH: KEEP WITH THIS PRIORITY
+		#- the one done closest in time to penkid
+		#- the first of the day
+		## -------------------------------------------------------------------------------------
 		# END MANIPULATING DATAFRAME
+		print(data)
+		print(j)
 
 
 		# CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------ temporary
