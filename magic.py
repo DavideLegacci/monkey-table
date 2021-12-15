@@ -15,7 +15,7 @@ from tqdm import tqdm
 empty_result = ''
 positive_result = '1'
 negative_result = ''
-num_max_days = 10
+num_max_days = 23
 sub_period_duration = 7
 keep_kein_material = 'y'
 
