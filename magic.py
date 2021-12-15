@@ -252,6 +252,7 @@ for patient in tqdm(os.listdir(lab_results_directory)):
 
         # Add column only with info about day
         data = data.assign(DAY=data['VALIDIERTDAT'].dt.strftime('%Y-%m-%d'))
+        #data['DAY'] = pd.to_datetime(data['DAY'], dayfirst = True)
 
         #START GETTING RID OF kein material ROWS
         if keep_kein_material == 'n':
@@ -386,7 +387,7 @@ for patient in tqdm(os.listdir(lab_results_directory)):
             raise Exception
 
         # Set maximal period of staying in the hospital; equal for everybody
-        period = pd.date_range(start=day0, periods=num_max_days)
+        period = pd.date_range(start=day0, periods=num_max_days).strftime('%Y-%m-%d')
         # print(period)
 
         # PARAMETERS TO KEEP 
@@ -450,14 +451,18 @@ for patient in tqdm(os.listdir(lab_results_directory)):
         # Add empty in day when exam is not done
         for p in parameters_needed_and_available_from_lab:
             results, dates = final_dictionary[p]
+            print(dates)
             if len(results) < num_max_days:
                 for i in range(num_max_days):
                     if period[i] not in dates:
-                            results.insert(i,empty_result)
+                        #print(f'{period[i]} not in {dates}')
+                        results.insert(i,empty_result)
+
         print(day0)
         print(data)
         print(final_dictionary)
-        print(period)
+        print(jj)
+
         # Collect all results; here final dictionary still contains dates, and [0] gets rid of it
         # patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
         # big_data.append(patient_results)
