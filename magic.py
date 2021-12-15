@@ -178,9 +178,7 @@ elif mode == 'test':
     print('\n\n -------TEST MODE ------- \n\n')
     all_needed_parameters = testing_parameters
 
-# -------------------------------------------------------------------- UPDATE PARAMETERS
 
-# big_data = [  ]
 num_patients = 0
 patient_identifier_ids = []
 
@@ -318,7 +316,7 @@ for patient in tqdm(os.listdir(lab_results_directory)):
         ##############################################
 
         # OPTION 1
-        #data.drop_duplicates( ['Parameter', 'VALIDIERTDAT'], keep = 'first', inplace = True, ignore_index = True  ) # <------------------------ to improve: allow choice of value to keep
+        #data.drop_duplicates( ['Parameter', 'VALIDIERTDAT'], keep = 'first', inplace = True, ignore_index = True  )
         for p in set(data.BESCHREIBUNG):
             #print(f'PERFORMING PARAMETER {p} WHILE REFERENCE IS {reference_parameter}\n')
             df_specific_for_p = data.loc[ data.BESCHREIBUNG == p ]
@@ -372,7 +370,7 @@ for patient in tqdm(os.listdir(lab_results_directory)):
         # END MANIPULATING DATAFRAME
 
 
-        # CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------ temporary
+        # CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------------------------------------------------------------------------- temporary
         # Get patient day0 = when she enters hospital
 
         day0 = min(data.DAY)
@@ -408,7 +406,7 @@ for patient in tqdm(os.listdir(lab_results_directory)):
         #       data.drop(parameter, axis = 0, inplace = True)
 
 
-        # data.sort_values(by=['VALIDIERTDAT'], inplace = True) # <-------------------------------------------------------- this should not really be necessary, is it? 
+        # data.sort_values(by=['VALIDIERTDAT'], inplace = True) 
         # print(f'\nSorted by date \n {data}\n')
 
         # Start building dictionary
