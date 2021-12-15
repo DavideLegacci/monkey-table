@@ -24,8 +24,8 @@ sub_period_duration = 7
 # START METADATA
 ####################################################################################################################################################################################
 
-# mode = 'test'
-mode = 'full'
+mode = 'test'
+#mode = 'full'
 
 if mode == 'full':
 	current_patient_one = int(input('\nWhich is the number of the first patient? Type a number and hit enter:  '))
@@ -38,7 +38,8 @@ elif mode == 'test':
 	keep_kein_material = 'n'
 
 
-lab_results_directory = './lab_results'
+lab_results_raw_directory = './lab_results_raw'		# data from software
+lab_results_directory = './lab_results_per_patient'	# one file per patient
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
 
 ####################################################################################################################################################################################
@@ -52,13 +53,44 @@ current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-
 # Goal: from multiple csv, each with data of multiple patients, get multiple excel files, each with all the data of a single patient
 ####################################################################################################################################################################################
 
+def save_excel_patient_sheet(df, dirname, filename):
+
+	filepath = f'{dirname}/{filename}'
+	os.makedirs(dirname, exist_ok=True)
+
+	with pd.ExcelWriter(filepath) as writer:
+		df.to_excel(writer)
+
+raw_data = []
+for raw_result in os.listdir(lab_results_raw_directory):
+	if raw_result.endswith(".csv") and not raw_result.startswith("~"):
+		print(raw_result)
+		# encoding https://stackoverflow.com/questions/42339876/error-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xff-in-position-0-in
+		# separator https://stackoverflow.com/questions/18039057/python-pandas-error-tokenizing-data
+		raw_data.append( pd.read_csv(f'{lab_results_raw_directory}/{raw_result}', encoding='cp1252', sep = ';') )  
+
+# Merge into single
+raw_df = pd.concat( raw_data )
+raw_df.sort_values('AUFTRAGNR', inplace = True)
+
+print(raw_df)
+print()
+
+for patient in set(raw_df.AUFTRAGNR):
+	print(patient)
+	raw_df_patient = raw_df[raw_df.AUFTRAGNR == patient]
+
+	filename = f'{patient}.xlsx'
+	save_excel_patient_sheet(raw_df_patient, f'lab_results_per_patient/{current_date}', filename)
 
 
-
+print('\nALL GOOD :)\n')
+print(j)
 
 ####################################################################################################################################################################################
 # END DATA MERGING ROUTINE
 ####################################################################################################################################################################################
+
 
 
 
