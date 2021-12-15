@@ -79,7 +79,6 @@ print('Generating excel file for each patient...\n')
 for patient in tqdm(set(raw_df.PATIFALLNR)):
 	
 	raw_df_patient = raw_df[raw_df.PATIFALLNR == patient]
-	print(raw_df_patient)
 
 	filename = f'{patient}.xlsx'
 	save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
@@ -155,7 +154,8 @@ if mode == 'full':
 	all_needed_parameters = testing_parameters # first_29_parameters + new_17_parameters
 
 elif mode == 'test':
-	all_needed_parameters =['a', 'b', 'c']
+	print('\n\n -------TEST MODE ------- \n\n')
+	all_needed_parameters = testing_parameters
 
 # -------------------------------------------------------------------- UPDATE PARAMETERS
 
@@ -190,14 +190,12 @@ for patient in os.listdir(lab_results_directory):
 		# Get rid of » symbol in indiced
 		# data.BESCHREIBUNG = data.BESCHREIBUNG.str.replace(' »', '')
 
-
-		# THE NEW DATA VERSION SHOULD CONTAIN ALL AND ONLY THE NEEDED PARAMETERS
-
 		# IF INSTEAD PARAMETERS ARE VALUES OF COLUMN # <----------- MAIN DROP
 		# https://stackoverflow.com/questions/18172851/deleting-dataframe-row-in-pandas-based-on-column-value
-		#for param in data.BESCHREIBUNG:
-			#if param not in all_needed_parameters:
-				#data.drop(data.index[ data.BESCHREIBUNG == param ], inplace = True) 
+		for param in data.BESCHREIBUNG:
+			if param not in all_needed_parameters:
+				print(f'{param} being dropped \n')
+				data.drop(data.index[ data.BESCHREIBUNG == param ], inplace = True) 
 
 				# Should be allright without this
 				# try:
@@ -207,7 +205,7 @@ for patient in os.listdir(lab_results_directory):
 
 		# Since some rows were dropped, not index looks like [0, 1, 5, 9, 15, ...]
 		# Which is a mess because data.colum[i] refers to that index. So need to reset.
-		# data.reset_index(inplace = True, drop = True)
+		data.reset_index(inplace = True, drop = True)
 
 		# Now not needed parameters are dropped from data.BESCHREIBUNG. It may still happen that a needed parameter is not present in result. Fixed later. 
 
@@ -228,14 +226,9 @@ for patient in os.listdir(lab_results_directory):
 		# Convert to datetime
 		data['VALIDIERTDAT'] = pd.to_datetime(data['VALIDIERTDAT'], dayfirst = True)
 
-		print(data)
-		print()
-
+		# Add column only with info about day
 		data = data.assign(DAY=data['VALIDIERTDAT'].dt.strftime('%Y-%m-%d'))
 
-
-		print(data)
-		print(j)
 
 
 		# <------------------------------------------------------------------------- This raises error if something is left in results column which is not a number, as +, - poisitiv, negativ, kein material, ...
@@ -271,6 +264,10 @@ for patient in os.listdir(lab_results_directory):
 
 		data = data.astype({"ERGEBNIST": str})
 
+		print(data)
+		print(j)
+
+
 
 
 		# START GETTING RID OF DUPLICATE EXAM 
@@ -288,7 +285,7 @@ for patient in os.listdir(lab_results_directory):
 			df_specific_for_p = data.loc[ data.BESCHREIBUNG == p ]
 
 			# https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html
-			boolean_duplicated_series = df_specific_for_p.duplicated( ['BESCHREIBUNG', 'Datum'], keep = False ) #----------------------------------------------------------------- yoyoyoyyo
+			boolean_duplicated_series = df_specific_for_p.duplicated( ['BESCHREIBUNG', 'Datum'], keep = False )
 
 			if( boolean_duplicated_series.any() ):
 				df_duplicated_p = df_specific_for_p[boolean_duplicated_series]
