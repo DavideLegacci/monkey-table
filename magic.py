@@ -60,7 +60,7 @@ def save_excel_patient_sheet(df, dirname, filename):
 	os.makedirs(dirname, exist_ok=True)
 
 	with pd.ExcelWriter(filepath) as writer:
-		df.to_excel(writer)
+		df.to_excel(writer, index = False)
 
 raw_data = []
 for raw_result in os.listdir(lab_results_raw_directory):
@@ -84,8 +84,8 @@ for patient in tqdm(set(raw_df.PATIFALLNR)):
 	filename = f'{patient}.xlsx'
 	save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
 
-print('\nALL GOOD :)\n')
-print(j)
+print('\nALL GOOD :)\n Starting data manipulation...')
+
 
 ####################################################################################################################################################################################
 # END DATA MERGING ROUTINE
@@ -97,8 +97,6 @@ print(j)
 ####################################################################################################################################################################################
 # START DATA MANIPULATION ROUTINE FOR EACH PATIENT
 ####################################################################################################################################################################################
-
-
 
 
 
@@ -151,11 +149,15 @@ first_29_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE
 # NEW 17
 new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
 
+testing_parameters = ['Plattenepithelien im Urin, absolut', 'Urobilinogen im Urin (Teststreifen)', 'pH-Wert im Urin (Teststreifen)', 'International Normalized Ratio (INR)-berechnet', 'partielle Thromboplastinzeit, aktiviert (aPTT)', 'Quick']
+
 if mode == 'full':
-	all_needed_parameters = first_29_parameters + new_17_parameters
+	all_needed_parameters = testing_parameters # first_29_parameters + new_17_parameters
 
 elif mode == 'test':
 	all_needed_parameters =['a', 'b', 'c']
+
+# -------------------------------------------------------------------- UPDATE PARAMETERS
 
 # big_data = [  ]
 num_patients = 0
@@ -178,89 +180,62 @@ for patient in os.listdir(lab_results_directory):
 		num_patients +=1
 		print(patient)
 
-		# Parse dates makes Datum column into date objects
-		# correctly read time as dd.mm.yy to yy-mm-dd VERIFY
-		# custom_date_parser = lambda x: datetime.strptime(x, "%d.%m.%y")
-		# data = pd.read_excel(f'{lab_results_directory}/{patient}', index_col = 0, skiprows = lambda x: x in [0, 2], parse_dates=['Datum '], date_parser=custom_date_parser)
-
 		# START MERGING DATAFRAME
 		# Read data into two df
-		data1 = pd.read_excel(f'{lab_results_directory}/{patient}', skiprows = 2, usecols = 'A, B, C, D')
-		data2 = pd.read_excel(f'{lab_results_directory}/{patient}', skiprows = 2, usecols = 'F, G, H, I')
-
-		# Rename columns of second to match columns of first
-		for i in range(len(data1.columns)):
-			data2.rename(columns={ data2.columns[i]: data1.columns[i] }, inplace = True)
-
-		# Merge into single
-		# ignore_index makes index range from 0 to n-1 rather than keeping original indice; dropna() drops rows with NaN
-		data = pd.concat( [data1, data2], ignore_index=True ).dropna()
-
-
-		# Print full dataframe
-		pd.set_option("display.max_rows", None, "display.max_columns", None)
-		# END MERGING DATAFRAME
-
-
-
-		# THIS IS INCLUDED IN CYCLE BELOW: IF PARAM NOT IN ALL_NEEDED_PARAMATERS, DROP IT
-		# Get rid of extra Parameter rows
-		# try:
-		# 	data.drop('Parameter', inplace = True)
-		# except:
-		# 	pass
-
+		data = pd.read_excel(f'{lab_results_directory}/{patient}') #, skiprows = 2, usecols = 'A, B, C, D')
 
 		# Get rid of spaces in columns
-		data.columns = data.columns.str.replace(' ', '')
+		#data.columns = data.columns.str.replace(' ', '')
 
 		# Get rid of » symbol in indiced
-		data.Parameter = data.Parameter.str.replace(' »', '')
+		# data.BESCHREIBUNG = data.BESCHREIBUNG.str.replace(' »', '')
 
-		# Drop not needed parameters
-		# THIS WORKS IS PARAMETERS ARE AXIS
-		# for param in data.Parameter:
-		# 	if param not in all_needed_parameters:
-		# 		try:
-		# 			data.drop(param, inplace = True) #<----------- MAIN DROP
-		# 		except:
-		# 			pass
+
+		# THE NEW DATA VERSION SHOULD CONTAIN ALL AND ONLY THE NEEDED PARAMETERS
 
 		# IF INSTEAD PARAMETERS ARE VALUES OF COLUMN # <----------- MAIN DROP
 		# https://stackoverflow.com/questions/18172851/deleting-dataframe-row-in-pandas-based-on-column-value
-		for param in data.Parameter:
-			if param not in all_needed_parameters:
-				data.drop(data.index[ data.Parameter == param ], inplace = True) 
+		#for param in data.BESCHREIBUNG:
+			#if param not in all_needed_parameters:
+				#data.drop(data.index[ data.BESCHREIBUNG == param ], inplace = True) 
 
 				# Should be allright without this
 				# try:
-				# 	data.drop(data.index[ data.Parameter == param ], inplace = True)
+				# 	data.drop(data.index[ data.BESCHREIBUNG == param ], inplace = True)
 				# except:
 				# 	pass
 
 		# Since some rows were dropped, not index looks like [0, 1, 5, 9, 15, ...]
 		# Which is a mess because data.colum[i] refers to that index. So need to reset.
-		data.reset_index(inplace = True, drop = True)
+		# data.reset_index(inplace = True, drop = True)
 
-		# Now not needed parameters are dropped from data.Parameter. It may still happen that a needed parameter is not present in result. Fixed later. 
+		# Now not needed parameters are dropped from data.BESCHREIBUNG. It may still happen that a needed parameter is not present in result. Fixed later. 
 
-
-		# drop norm column
-		data.drop('Normb / Dimension', axis = 1, inplace = True)
-
+		# drop not needed columns
+		not_needed_columns = ['AUFTRAGNR', 'GEBDAT', 'SEX', 'EINSCODE', 'LABEINDAT', ]
+		for col in not_needed_columns:
+			data.drop(col, axis = 1, inplace = True)
 
 
 		# Fix dates format
-		for i in range(len(data.Datum)):
+		# for i in range(len(data.Datum)):
 
-			# Some dates were recognized by pandas already as datetimes; other are still strings because 1. they contain spaces and 2. they contain . rather than /
-			if type( data.at[i, 'Datum'] ) is str:
-				data.at[i, 'Datum'] = data.at[i, 'Datum'].replace(' ', '')
-				data.at[i, 'Datum'] = data.at[i, 'Datum'].replace('.', '/')	
+		# 	# Some dates were recognized by pandas already as datetimes; other are still strings because 1. they contain spaces and 2. they contain . rather than /
+		# 	if type( data.at[i, 'Datum'] ) is str:
+		# 		data.at[i, 'Datum'] = data.at[i, 'Datum'].replace(' ', '')
+		# 		data.at[i, 'Datum'] = data.at[i, 'Datum'].replace('.', '/')	
 
-		# Convert to datetime. Those that already are, are not affected
-		data['Datum'] = pd.to_datetime(data['Datum'], dayfirst = True)
+		# Convert to datetime
+		data['VALIDIERTDAT'] = pd.to_datetime(data['VALIDIERTDAT'], dayfirst = True)
 
+		print(data)
+		print()
+
+		data = data.assign(DAY=data['VALIDIERTDAT'].dt.strftime('%Y-%m-%d'))
+
+
+		print(data)
+		print(j)
 
 
 		# <------------------------------------------------------------------------- This raises error if something is left in results column which is not a number, as +, - poisitiv, negativ, kein material, ...
@@ -270,7 +245,7 @@ for patient in os.listdir(lab_results_directory):
 		if keep_kein_material == 'n':
 			strings_to_kill = ['Kein Material', 'K.Mat.']
 			for s in strings_to_kill:
-				index_to_kill = data.index[ data.Wert == s ]
+				index_to_kill = data.index[ data.ERGEBNIST == s ]
 				[ print(f"---------------Dropping {s} for {data.at[ i , 'Parameter']}") for i in list(index_to_kill) ]
 				data.drop(index_to_kill, inplace = True)
 
@@ -284,23 +259,21 @@ for patient in os.listdir(lab_results_directory):
 		# anything else remains text
 
 		# Get rid of !L and !H flags
-		for i in range(len(data.Wert)):
-			if type( data.at[i, 'Wert'] ) is str:
-				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace(' !L', '')
-				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace(' !H', '')
-				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace('negativ', negative_result)
-				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace('-', negative_result)
-				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace('positiv', positive_result)
-				data.at[i, 'Wert'] = data.at[i, 'Wert'].replace('+', positive_result)
+		for i in range(len(data.ERGEBNIST)):
+			if type( data.at[i, 'ERGEBNIST'] ) is str:
+				#data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace(' !L', '')
+				#data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace(' !H', '')
+				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('negativ', negative_result)
+				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('-', negative_result)
+				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('positiv', positive_result)
+				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('+', positive_result)
 		# END NON STANDARD RESULTS
 
-
-		# Set values as float; if not (i.e. if strinsg) the xarray is messed up bc/ interpretes 7.21 as '7', '.', '2', '1'
-		# data = data.astype({"Wert": float}) # <-------------------------------------- this raises error if values are (incorrectly) interpreted by excel as dates. Temp fix by setting text type in excel
-		data = data.astype({"Wert": str}) # <-------------------------------------- this raises error if values are (incorrectly) interpreted by excel as dates. Temp fix by setting text type in excel
+		data = data.astype({"ERGEBNIST": str})
 
 
-		# START GETTING RID OF DUPLICATE EXAM <------------------------------------------------------------------------------------------------- WORKING HERE.
+
+		# START GETTING RID OF DUPLICATE EXAM 
 		# POSSIBILITIES:
 		
 		# 1. Restructure all so that parameters are column, not index, and use
@@ -311,11 +284,11 @@ for patient in os.listdir(lab_results_directory):
 
 		# OPTION 1
 		#data.drop_duplicates( ['Parameter', 'Datum'], keep = 'first', inplace = True, ignore_index = True  ) # <------------------------ to improve: allow choice of value to keep
-		for p in set(data.Parameter):
-			df_specific_for_p = data.loc[ data.Parameter == p ]
+		for p in set(data.BESCHREIBUNG):
+			df_specific_for_p = data.loc[ data.BESCHREIBUNG == p ]
 
 			# https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html
-			boolean_duplicated_series = df_specific_for_p.duplicated( ['Parameter', 'Datum'], keep = False )
+			boolean_duplicated_series = df_specific_for_p.duplicated( ['BESCHREIBUNG', 'Datum'], keep = False ) #----------------------------------------------------------------- yoyoyoyyo
 
 			if( boolean_duplicated_series.any() ):
 				df_duplicated_p = df_specific_for_p[boolean_duplicated_series]
@@ -357,15 +330,15 @@ for patient in os.listdir(lab_results_directory):
 		# PARAMETERS TO KEEP 
 
 		# parameters actually present in lab results
-		# parameters_needed_and_available_from_lab = list(set(data.Parameter)) # this works but CHANGES ORDER
+		# parameters_needed_and_available_from_lab = list(set(data.BESCHREIBUNG)) # this works but CHANGES ORDER
 
 		# this contains the parameters that are needed AND available from the lab results, in the same order of all_needed_parameters
-		parameters_needed_and_available_from_lab = [ p for p in all_needed_parameters if p in list(data.Parameter )]
+		parameters_needed_and_available_from_lab = [ p for p in all_needed_parameters if p in list(data.BESCHREIBUNG )]
 
-		# parameters_needed_and_available_from_lab is equal to data.Parameter, without repetitions
-		parameters_needed_but_not_available_from_lab = [p for p in all_needed_parameters if p not in list(data.Parameter)]
+		# parameters_needed_and_available_from_lab is equal to data.BESCHREIBUNG, without repetitions
+		parameters_needed_but_not_available_from_lab = [p for p in all_needed_parameters if p not in list(data.BESCHREIBUNG)]
 
-		# for parameter in data.Parameter:
+		# for parameter in data.BESCHREIBUNG:
 		# 	if parameter not in parameters_needed_and_available_from_lab:
 		# 		data.drop(parameter, axis = 0, inplace = True)
 
@@ -379,10 +352,10 @@ for patient in os.listdir(lab_results_directory):
 		# def get_results(parameter):
 		# 	try:
 		# 		# if there is more than one result
-		# 		return list(data.loc[parameter].Wert)
+		# 		return list(data.loc[parameter].ERGEBNIST)
 		# 	except:
 		# 		# if there is only one result
-		# 		return [data.loc[parameter].Wert]
+		# 		return [data.loc[parameter].ERGEBNIST]
 
 		# def get_dates(parameter):
 		# 	try:
@@ -393,10 +366,10 @@ for patient in os.listdir(lab_results_directory):
 		# 		return [data.loc[parameter].Datum]
 
 		def get_results(parameter):
-			return list(data[data.Parameter == parameter].Wert)
+			return list(data[data.BESCHREIBUNG == parameter].ERGEBNIST)
 
 		def get_dates(parameter):
-			return list(data[data.Parameter == parameter].Datum)
+			return list(data[data.BESCHREIBUNG == parameter].Datum)
 
 		final_dictionary = {}
 		for p in all_needed_parameters:
