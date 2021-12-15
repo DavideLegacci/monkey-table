@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import numpy as np
 import xarray as xr
+from tqdm import tqdm
 
 ####################################################################################################################################################################################
 # START PARAMETERS TO EDIT
@@ -37,10 +38,10 @@ elif mode == 'test':
 	current_patient_one = 5
 	keep_kein_material = 'n'
 
-
-lab_results_raw_directory = './lab_results_raw'		# data from software
-lab_results_directory = './lab_results_per_patient'	# one file per patient
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
+lab_results_raw_directory = './lab_results_raw'		# data from software
+lab_results_directory = f'lab_results_per_patient/{current_date}'	# one file per patient
+
 
 ####################################################################################################################################################################################
 # END METADATA
@@ -73,16 +74,13 @@ for raw_result in os.listdir(lab_results_raw_directory):
 raw_df = pd.concat( raw_data )
 raw_df.sort_values('AUFTRAGNR', inplace = True)
 
-print(raw_df)
-print()
-
-for patient in set(raw_df.AUFTRAGNR):
-	print(patient)
+print('Generating excel file for each patient...\n')
+for patient in tqdm(set(raw_df.AUFTRAGNR)):
+	
 	raw_df_patient = raw_df[raw_df.AUFTRAGNR == patient]
 
 	filename = f'{patient}.xlsx'
-	save_excel_patient_sheet(raw_df_patient, f'lab_results_per_patient/{current_date}', filename)
-
+	save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
 
 print('\nALL GOOD :)\n')
 print(j)
