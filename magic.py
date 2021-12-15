@@ -72,12 +72,14 @@ for raw_result in os.listdir(lab_results_raw_directory):
 
 # Merge into single
 raw_df = pd.concat( raw_data )
-raw_df.sort_values('AUFTRAGNR', inplace = True)
+print(raw_df)
+#raw_df.sort_values('PATIFALLNR', inplace = True)
 
 print('Generating excel file for each patient...\n')
-for patient in tqdm(set(raw_df.AUFTRAGNR)):
+for patient in tqdm(set(raw_df.PATIFALLNR)):
 	
-	raw_df_patient = raw_df[raw_df.AUFTRAGNR == patient]
+	raw_df_patient = raw_df[raw_df.PATIFALLNR == patient]
+	print(raw_df_patient)
 
 	filename = f'{patient}.xlsx'
 	save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
