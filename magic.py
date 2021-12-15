@@ -18,6 +18,9 @@ negative_result = ''
 num_max_days = 10
 sub_period_duration = 7
 keep_kein_material = 'y'
+
+#mode = 'test'
+mode = 'full'
 ####################################################################################################################################################################################
 # END PARAMETERS TO EDIT
 ####################################################################################################################################################################################
@@ -28,8 +31,7 @@ keep_kein_material = 'y'
 # START METADATA
 ####################################################################################################################################################################################
 
-mode = 'test'
-#mode = 'full'
+
 
 # if mode == 'full':
 #   keep_kein_material = ''
@@ -447,21 +449,16 @@ for patient in tqdm(os.listdir(lab_results_directory)):
                 raise Exception('Something wrong')
 
 
-        print(final_dictionary)
+        #print(final_dictionary)
         # Add empty in day when exam is not done
         for p in parameters_needed_and_available_from_lab:
             results, dates = final_dictionary[p]
-            print(dates)
+            #print(dates)
             if len(results) < num_max_days:
                 for i in range(num_max_days):
                     if period[i] not in dates:
                         #print(f'{period[i]} not in {dates}')
                         results.insert(i,empty_result)
-
-        print(day0)
-        print(data)
-        print(final_dictionary)
-        print(jj)
 
         # Collect all results; here final dictionary still contains dates, and [0] gets rid of it
         # patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
