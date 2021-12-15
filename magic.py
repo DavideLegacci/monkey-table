@@ -15,7 +15,7 @@ from tqdm import tqdm
 empty_result = ''
 positive_result = '1'
 negative_result = ''
-num_max_days = 23
+num_max_days = 10
 sub_period_duration = 7
 keep_kein_material = 'y'
 ####################################################################################################################################################################################
@@ -28,8 +28,8 @@ keep_kein_material = 'y'
 # START METADATA
 ####################################################################################################################################################################################
 
-#mode = 'test'
-mode = 'full'
+mode = 'test'
+#mode = 'full'
 
 # if mode == 'full':
 #   keep_kein_material = ''
@@ -80,7 +80,7 @@ if perform_merging_routine == 'y':
             print(raw_result)
             # encoding https://stackoverflow.com/questions/42339876/error-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xff-in-position-0-in
             # separator https://stackoverflow.com/questions/18039057/python-pandas-error-tokenizing-data
-            raw_data.append( pd.read_csv(f'{lab_results_raw_directory}/{raw_result}', encoding='cp1252', sep = ';') )  
+            raw_data.append( pd.read_csv(f'{lab_results_raw_directory}/{raw_result}', encoding='cp1252', sep = ';', keep_default_na = False) )  
 
     # Merge into single
     raw_df = pd.concat( raw_data )
@@ -94,7 +94,7 @@ if perform_merging_routine == 'y':
         filename = f'{patient}.xlsx'
         save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
 
-    input('\nALL GOOD :)\n Starting data manipulation. Hit enter to continue...')
+    print('\nALL GOOD :)\n Starting data manipulation.')
 
 if perform_merging_routine == 'n':
 
@@ -166,8 +166,7 @@ def dict_of_lists_to_list_of_dicts(dict_of_lists):
 # NEW 17
 #new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
 
-testing_parameters = ['Phosphat','Plattenepithelien im Urin, absolut', 'Urobilinogen im Urin (Teststreifen)', 'pH-Wert im Urin (Teststreifen)', 'International Normalized Ratio (INR)-berechnet', 'partielle Thromboplastinzeit, aktiviert (aPTT)', 'Quick']
-
+testing_parameters = ['Albumin', 'C-reaktives Protein (CRP)', 'GFR nach CKD-EPI']
 all_parameters_final = ['Tacrolimus ( MS )', 'Ciclosporin MC ( MS )', 'Natrium', 'Kalium', 'Calcium, korrigiert', 'Kreatinin', 'Proenkephalin', 'GFR nach CKD-EPI', 'Harnstoff', 'Glucose', 'Laktatdehydrogenase (LDH)', 'Glutamat-Oxalacetat-Transaminase/Aspartat-Aminotransferase (GOT/AST)', 'Glutamat-Pyruvat-Transaminase/Alanin-Aminotransferase (GPT/ALT)', 'Alkalische Phosphatase (AP)', 'gamma-Glutamyltransferase (GGT)', 'Bilirubin, gesamt', 'Phosphat', 'Gesamteiwei¤', 'Albumin', 'Procalcitonin (PCT), sensitiv', 'C-reaktives Protein (CRP)', 'Leukozyten', 'H_moglobin (Hb)', 'H_matokrit', 'Thrombozyten', 'n-terminal pro-brain natriuretic peptide (NT-ProBNP)', 'Troponin T (TNT), high sensitive im Plasma', 'International Normalized Ratio (INR)-berechnet', 'Quick', 'partielle Thromboplastinzeit, aktiviert (aPTT)', 'Parathormon (PTH), intakt', 'Triglyceride', 'Albumin im Urin / Kreatinin im Urin', 'pH-Wert im Urin (Teststreifen)', 'Nitrit im Urin (Teststreifen)', 'Eiwei¤ im Urin (Teststreifen)', 'Glucose im Urin (Teststreifen)', 'Ketonk_rper im Urin (Teststreifen)', 'Urobilinogen im Urin (Teststreifen)', 'Bilirubin im Urin (Teststreifen)', 'Bakterien im Urin/µl', 'Erythrozyten im Urin, absolut', 'Leukozyten im Urin, absolut', 'Granulierte Zylinder/µl', 'Plattenepithelien im Urin, absolut', 'Hyaline Zylinder/µl', 'Rundepithelien/µl', 'Eiweiß im Urin / d', 'pH-Wert, arteriell', 'Kohlendioxidpartialdruck (pCO2), arteriell', 'Sauerstoffpartialdruck (pO2), arteriell', 'Base Excess, arteriell', 'Standard-Bicarbonat, arteriell']
 
 if mode == 'full':
@@ -194,13 +193,14 @@ big_data_multiple_sheets = [  [ ] for _ in range(number_of_sheets)  ]
 # START PATIENT
 
 # Read each excel file in lab_results_directory into dataframe and put it into data_list
-for patient in os.listdir(lab_results_directory):
+print('\n Starting patients loop...')
+for patient in tqdm(os.listdir(lab_results_directory)):
     # make sure to select only excel files; sometimes hidden files like ~$patient.xlsx are created, which must be excluded:
     if patient.endswith(".xlsx") and not patient.startswith("~"):
 
         num_patients +=1
         #patient_identifier_ids.append(patient)
-        print(f'processing patient {patient}...')
+        #print(f'processing patient {patient}...')
 
         # START MERGING DATAFRAME
         # Read data into two df
@@ -301,20 +301,18 @@ for patient in os.listdir(lab_results_directory):
         boolean_duplicated_series_reference = df_specific_for_reference_parameter.duplicated( ['BESCHREIBUNG', 'DAY'], keep = False )
         if( boolean_duplicated_series_reference.any() ):
             df_duplicated_reference_parameter = df_specific_for_reference_parameter[boolean_duplicated_series_reference]
-            print('\n----')
-            print(df_duplicated_reference_parameter)
-            input(f'\n ---- ALERT----- \n\n Reference parameter {reference_parameter} appears more than once per day. Keeping first. Enter to continue' )
+            
             for day in set(df_duplicated_reference_parameter.DAY):
                 df_duplicated_reference_parameter_day = df_duplicated_reference_parameter[ df_duplicated_reference_parameter.DAY == day ]
                 index_to_keep_reference = df_duplicated_reference_parameter_day['VALIDIERTDAT'].idxmin()
+                #print()
+                #print(df_duplicated_reference_parameter_day)
                 for i in df_duplicated_reference_parameter_day.index:
                     if str(i) != str(index_to_keep_reference):
                         data.drop(i, inplace = True)
-            data.reset_index(inplace = True, drop = True)        
+            data.reset_index(inplace = True, drop = True)
+            #input(f'\n ---- ALERT----- \n\n Reference parameter {reference_parameter} appears more than once per day. Keeping first of each day. Enter to continue' )        
         ##############################################
-        print()
-        print(data)
-        print()
 
         # OPTION 1
         #data.drop_duplicates( ['Parameter', 'VALIDIERTDAT'], keep = 'first', inplace = True, ignore_index = True  ) # <------------------------ to improve: allow choice of value to keep
@@ -329,7 +327,9 @@ for patient in os.listdir(lab_results_directory):
                 df_duplicated_p = df_specific_for_p[boolean_duplicated_series]
                 for day in set(df_duplicated_p.DAY):
                     df_duplicated_p_day = df_duplicated_p[ df_duplicated_p.DAY == day ]
-                    print(df_duplicated_p_day)
+                    #print()
+                    #print(df_duplicated_p_day)
+                   
 
                     # Not reference parameter
                     current_day = list(df_duplicated_p_day.DAY)[0]
@@ -337,13 +337,12 @@ for patient in os.listdir(lab_results_directory):
                     reference_df = data[ data.BESCHREIBUNG == reference_parameter ]
                     reference_df = reference_df[ reference_df.DAY == current_day ]
                     #reference_time = list(reference_df.VALIDIERTDAT)[0]
-                    print()
-                    print('debug------------------')
-                    print(reference_df)
-                    print()
-                    #print(reference_time)
-                    print('debug------------------')
-                    print()
+                    # print()
+                    # print('debug------------------')
+                    # print(reference_df)
+                    # print()
+                    # print('debug------------------')
+                    # print()
                     #####
                     try:
                         # reference_df = data[ data.BESCHREIBUNG == reference_parameter ]
@@ -351,23 +350,21 @@ for patient in os.listdir(lab_results_directory):
                         reference_time = list(reference_df.VALIDIERTDAT)[0]
                         closest_time = find_nearest( df_duplicated_p_day.VALIDIERTDAT, reference_time )
                         index_to_keep = df_duplicated_p_day.index[df_duplicated_p_day['VALIDIERTDAT'] == closest_time].tolist()[0]
-                        print('Comparison done')
-                        print(f'reference_time: {reference_time}')
+                        # print('Comparison done')
+                        # print(f'reference_time: {reference_time}')
                     except:
                         index_to_keep = df_duplicated_p_day['VALIDIERTDAT'].idxmin()
-                        print('Just kept first')
-                    print(f'Index to keep: {index_to_keep}\n')
+                    #     print('Just kept first')
+                    # print(f'Index to keep: {index_to_keep}\n')
 
                     for i in df_duplicated_p_day.index:
                         if str(i) != str(index_to_keep):
                             data.drop(i, inplace = True)
 
-        #data.reset_index(inplace = True, drop = True)
+        data.reset_index(inplace = True, drop = True)
+
 
         # END GETTING RID OF DUPLICATE EXAM # ----------
-        print(data)
-        print(j)
-
 
         # END MANIPULATING DATAFRAME
 
@@ -375,7 +372,8 @@ for patient in os.listdir(lab_results_directory):
         # CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------ temporary
         # Get patient day0 = when she enters hospital
 
-        day0 = min(data.VALIDIERTDAT)
+        day0 = min(data.DAY)
+
 
         # Get range of time in which exams are taken
         day_first_exam, day_last_exam = min(data.VALIDIERTDAT), max(data.VALIDIERTDAT)
@@ -433,7 +431,8 @@ for patient in os.listdir(lab_results_directory):
             return list(data[data.BESCHREIBUNG == parameter].ERGEBNIST)
 
         def get_dates(parameter):
-            return list(data[data.BESCHREIBUNG == parameter].VALIDIERTDAT)
+            return list(data[data.BESCHREIBUNG == parameter].DAY)
+
 
         final_dictionary = {}
         for p in all_needed_parameters:
@@ -447,6 +446,7 @@ for patient in os.listdir(lab_results_directory):
                 raise Exception('Something wrong')
 
 
+        print(final_dictionary)
         # Add empty in day when exam is not done
         for p in parameters_needed_and_available_from_lab:
             results, dates = final_dictionary[p]
@@ -454,8 +454,10 @@ for patient in os.listdir(lab_results_directory):
                 for i in range(num_max_days):
                     if period[i] not in dates:
                             results.insert(i,empty_result)
-
-
+        print(day0)
+        print(data)
+        print(final_dictionary)
+        print(period)
         # Collect all results; here final dictionary still contains dates, and [0] gets rid of it
         # patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
         # big_data.append(patient_results)
@@ -479,7 +481,7 @@ for patient in os.listdir(lab_results_directory):
 ####################################################################################################################################################################################
 # END DATA MANIPULATION ROUTINE FOR EACH PATIENT
 ####################################################################################################################################################################################
-
+print('\n Patient loop completed! \n Writing in excel...')
 ####################################################################################################################################################################################
 # START WRITING TO FINAL SHEET
 ####################################################################################################################################################################################
