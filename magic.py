@@ -15,6 +15,7 @@ positive_result = '1'
 negative_result = ''
 num_max_days = 23
 sub_period_duration = 7
+keep_kein_material = 'y'
 ####################################################################################################################################################################################
 # END PARAMETERS TO EDIT
 ####################################################################################################################################################################################
@@ -25,18 +26,14 @@ sub_period_duration = 7
 # START METADATA
 ####################################################################################################################################################################################
 
-mode = 'test'
-#mode = 'full'
+#mode = 'test'
+mode = 'full'
 
-if mode == 'full':
-	current_patient_one = int(input('\nWhich is the number of the first patient? Type a number and hit enter:  '))
-	keep_kein_material = ''
-	while keep_kein_material not in ['y', 'n']:
-		keep_kein_material = input("\nShould I keep 'Kein Material' results? Type y or n: ")
+# if mode == 'full':
+# 	keep_kein_material = ''
+# 	while keep_kein_material not in ['y', 'n']:
+# 		keep_kein_material = input("\nShould I keep 'Kein Material' results? Type y or n: ")
 
-elif mode == 'test':
-	current_patient_one = 5
-	keep_kein_material = 'n'
 
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
 lab_results_raw_directory = './lab_results_raw'		# data from software
@@ -142,15 +139,17 @@ def dict_of_lists_to_list_of_dicts(dict_of_lists):
 
 
 # FIRST 29
-first_29_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE)', 'Calcium', 'Kreatinin', 'Proenkephalin', 'GFR, CKD-EPI', 'Harnstoff', 'Glucose', 'LDH', 'GOT/AST', 'GPT/ALT', 'AP', 'GGT', 'bili-temp', 'Phosphat', 'Ges.Eiweiss', 'Albumin quant.', 'CRP', 'Leukozyten', 'Hb', 'Thrombozyten', 'ntpro-temp', 'tnt-temp', 'INR - ber.', 'Quick', 'aPTT', 'ipth-temp']
+#first_29_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE)', 'Calcium', 'Kreatinin', 'Proenkephalin', 'GFR, CKD-EPI', 'Harnstoff', 'Glucose', 'LDH', 'GOT/AST', 'GPT/ALT', 'AP', 'GGT', 'bili-temp', 'Phosphat', 'Ges.Eiweiss', 'Albumin quant.', 'CRP', 'Leukozyten', 'Hb', 'Thrombozyten', 'ntpro-temp', 'tnt-temp', 'INR - ber.', 'Quick', 'aPTT', 'ipth-temp']
 
 # NEW 17
-new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
+#new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
 
 testing_parameters = ['Phosphat','Plattenepithelien im Urin, absolut', 'Urobilinogen im Urin (Teststreifen)', 'pH-Wert im Urin (Teststreifen)', 'International Normalized Ratio (INR)-berechnet', 'partielle Thromboplastinzeit, aktiviert (aPTT)', 'Quick']
 
+all_parameters_final = ['Tacrolimus ( MS )', 'Ciclosporin MC ( MS )', 'Natrium', 'Kalium', 'Calcium, korrigiert', 'Kreatinin', 'Proenkephalin', 'GFR nach CKD-EPI', 'Harnstoff', 'Glucose', 'Laktatdehydrogenase (LDH)', 'Glutamat-Oxalacetat-Transaminase/Aspartat-Aminotransferase (GOT/AST)', 'Glutamat-Pyruvat-Transaminase/Alanin-Aminotransferase (GPT/ALT)', 'Alkalische Phosphatase (AP)', 'gamma-Glutamyltransferase (GGT)', 'Bilirubin, gesamt', 'Phosphat', 'Gesamteiwei¤', 'Albumin', 'Procalcitonin (PCT), sensitiv', 'C-reaktives Protein (CRP)', 'Leukozyten', 'H_moglobin (Hb)', 'H_matokrit', 'Thrombozyten', 'n-terminal pro-brain natriuretic peptide (NT-ProBNP)', 'Troponin T (TNT), high sensitive im Plasma', 'International Normalized Ratio (INR)-berechnet', 'Quick', 'partielle Thromboplastinzeit, aktiviert (aPTT)', 'Parathormon (PTH), intakt', 'Triglyceride', 'Albumin im Urin / Kreatinin im Urin', 'pH-Wert im Urin (Teststreifen)', 'Nitrit im Urin (Teststreifen)', 'Eiwei¤ im Urin (Teststreifen)', 'Glucose im Urin (Teststreifen)', 'Ketonk_rper im Urin (Teststreifen)', 'Urobilinogen im Urin (Teststreifen)', 'Bilirubin im Urin (Teststreifen)', 'Bakterien im Urin/µl', 'Erythrozyten im Urin, absolut', 'Leukozyten im Urin, absolut', 'Granulierte Zylinder/µl', 'Plattenepithelien im Urin, absolut', 'Hyaline Zylinder/µl', 'Rundepithelien/µl', 'Eiweiß im Urin / d', 'pH-Wert, arteriell', 'Kohlendioxidpartialdruck (pCO2), arteriell', 'Sauerstoffpartialdruck (pO2), arteriell', 'Base Excess, arteriell', 'Standard-Bicarbonat, arteriell']
+
 if mode == 'full':
-	all_needed_parameters = testing_parameters # first_29_parameters + new_17_parameters
+	all_needed_parameters = all_parameters_final # first_29_parameters + new_17_parameters
 
 elif mode == 'test':
 	print('\n\n -------TEST MODE ------- \n\n')
