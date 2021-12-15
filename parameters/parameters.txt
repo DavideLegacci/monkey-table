@@ -1,0 +1,53 @@
+Tacrolimus ( MS )
+Ciclosporin MC ( MS )
+Natrium
+Kalium
+Calcium, korrigiert
+Kreatinin
+Proenkephalin
+GFR nach CKD-EPI
+Harnstoff
+Glucose
+Laktatdehydrogenase (LDH)
+Glutamat-Oxalacetat-Transaminase/Aspartat-Aminotransferase (GOT/AST)
+Glutamat-Pyruvat-Transaminase/Alanin-Aminotransferase (GPT/ALT)
+Alkalische Phosphatase (AP)
+gamma-Glutamyltransferase (GGT)
+Bilirubin, gesamt
+Phosphat
+Gesamteiwei¤
+Albumin
+Procalcitonin (PCT), sensitiv
+C-reaktives Protein (CRP)
+Leukozyten
+H_moglobin (Hb)
+H_matokrit
+Thrombozyten
+n-terminal pro-brain natriuretic peptide (NT-ProBNP)
+Troponin T (TNT), high sensitive im Plasma
+International Normalized Ratio (INR)-berechnet
+Quick
+partielle Thromboplastinzeit, aktiviert (aPTT)
+Parathormon (PTH), intakt
+Triglyceride
+Albumin im Urin / Kreatinin im Urin
+pH-Wert im Urin (Teststreifen)
+Nitrit im Urin (Teststreifen)
+Eiwei¤ im Urin (Teststreifen)
+Glucose im Urin (Teststreifen)
+Ketonk_rper im Urin (Teststreifen)
+Urobilinogen im Urin (Teststreifen)
+Bilirubin im Urin (Teststreifen)
+Bakterien im Urin/µl
+Erythrozyten im Urin, absolut
+Leukozyten im Urin, absolut
+Granulierte Zylinder/µl
+Plattenepithelien im Urin, absolut
+Hyaline Zylinder/µl
+Rundepithelien/µl
+Eiweiß im Urin / d
+pH-Wert, arteriell
+Kohlendioxidpartialdruck (pCO2), arteriell
+Sauerstoffpartialdruck (pO2), arteriell
+Base Excess, arteriell
+Standard-Bicarbonat, arteriell

@@ -37,7 +37,10 @@ mode = 'full'
 
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
 lab_results_raw_directory = './lab_results_raw'		# data from software
-lab_results_directory = f'lab_results_per_patient/{current_date}'	# one file per patient
+
+
+reference_parameter = 'Albumin'
+reference_parameter = 'Proenkephalin'
 
 
 ####################################################################################################################################################################################
@@ -51,35 +54,50 @@ lab_results_directory = f'lab_results_per_patient/{current_date}'	# one file per
 # Goal: from multiple csv, each with data of multiple patients, get multiple excel files, each with all the data of a single patient
 ####################################################################################################################################################################################
 
-def save_excel_patient_sheet(df, dirname, filename):
+perform_merging_routine = ''
+while perform_merging_routine not in ['y', 'n']:
+	perform_merging_routine = input("\nPerform merging routine? Type y or n: ")
 
-	filepath = f'{dirname}/{filename}'
-	os.makedirs(dirname, exist_ok=True)
+if perform_merging_routine == 'y':
 
-	with pd.ExcelWriter(filepath) as writer:
-		df.to_excel(writer, index = False)
+	lab_results_directory = f'lab_results_per_patient/{current_date}'	# one file per patient
 
-raw_data = []
-for raw_result in os.listdir(lab_results_raw_directory):
-	if raw_result.endswith(".csv") and not raw_result.startswith("~"):
-		print(raw_result)
-		# encoding https://stackoverflow.com/questions/42339876/error-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xff-in-position-0-in
-		# separator https://stackoverflow.com/questions/18039057/python-pandas-error-tokenizing-data
-		raw_data.append( pd.read_csv(f'{lab_results_raw_directory}/{raw_result}', encoding='cp1252', sep = ';') )  
+	def save_excel_patient_sheet(df, dirname, filename):
 
-# Merge into single
-raw_df = pd.concat( raw_data )
+		filepath = f'{dirname}/{filename}'
+		os.makedirs(dirname, exist_ok=True)
+
+		with pd.ExcelWriter(filepath) as writer:
+			df.to_excel(writer, index = False)
+
+	raw_data = []
+	for raw_result in os.listdir(lab_results_raw_directory):
+		if raw_result.endswith(".csv") and not raw_result.startswith("~"):
+			print(raw_result)
+			# encoding https://stackoverflow.com/questions/42339876/error-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xff-in-position-0-in
+			# separator https://stackoverflow.com/questions/18039057/python-pandas-error-tokenizing-data
+			raw_data.append( pd.read_csv(f'{lab_results_raw_directory}/{raw_result}', encoding='cp1252', sep = ';') )  
+
+	# Merge into single
+	raw_df = pd.concat( raw_data )
 
 
-print('Generating excel file for each patient...\n')
-for patient in tqdm(set(raw_df.PATIFALLNR)):
-	
-	raw_df_patient = raw_df[raw_df.PATIFALLNR == patient]
+	print('Generating excel file for each patient...\n')
+	for patient in tqdm(set(raw_df.PATIFALLNR)):
+		
+		raw_df_patient = raw_df[raw_df.PATIFALLNR == patient]
 
-	filename = f'{patient}.xlsx'
-	save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
+		filename = f'{patient}.xlsx'
+		save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
 
-input('\nALL GOOD :)\n Starting data manipulation...')
+	input('\nALL GOOD :)\n Starting data manipulation...')
+
+if perform_merging_routine == 'n':
+
+	name_of_directory_to_use = os.listdir('lab_results_per_patient')[-1]
+
+	lab_results_directory = f'lab_results_per_patient/{name_of_directory_to_use}'	# one file per patient
+
 
 
 ####################################################################################################################################################################################
