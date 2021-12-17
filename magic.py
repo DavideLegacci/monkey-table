@@ -63,14 +63,16 @@ def find_nearest(items, pivot):
 ####################################################################################################################################################################################
 # START PATIENTS MAP
 ####################################################################################################################################################################################
-patients_map = pd.read_excel(patients_map_path, index_col = None)
+patients_map = pd.read_excel(patients_map_path, keep_default_na = False)
 
 
 def patNum2ID(num):
-    return patients_map[ patients_map.PatNum == num ].PatID[0]
+    return patients_map[ patients_map.LFDNR == num ].PATIFALLNR.iloc[0]
 
 def patID2Num(ID):
-    return patients_map[ patients_map.PatID == ID ].PatNum[0]
+    return patients_map[ patients_map.PATIFALLNR == ID ].LFDNR.iloc[0]
+
+
 
 
 ####################################################################################################################################################################################
@@ -111,6 +113,17 @@ if perform_merging_routine == 'y':
     # Merge into single
     raw_df = pd.concat( raw_data )
 
+
+    patient_IDs_in_current_labresults = set(raw_df.PATIFALLNR)
+    patient_IDs_in_patients_map = set(patients_map.PATIFALLNR)
+    #print(patient_IDs_in_current_labresults)
+    #print(patient_IDs_in_patients_map)
+    for p in patient_IDs_in_current_labresults:
+        if p not in patient_IDs_in_patients_map:
+            raise Exception(f'PATIFALLNR {p} is NOT matched in patients map.')
+        if patID2Num(p) == '':
+            raise Exception(f'PATIFALLNR {p} is in patients map, but it is not associated to a number')
+    print(j)
 
     print('Generating excel file for each patient...\n')
     for patient in tqdm(set(raw_df.PATIFALLNR)):
