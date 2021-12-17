@@ -21,6 +21,12 @@ keep_kein_material = 'y'
 
 #mode = 'test'
 mode = 'full'
+
+# Dir names
+lab_results_raw_directory = './lab_results_raw'     # data from software
+directory_merged_results_per_patient = 'lab_results_per_patient'
+directory_final_sheet = 'COMPILED-SHEETS'
+
 ####################################################################################################################################################################################
 # END PARAMETERS TO EDIT
 ####################################################################################################################################################################################
@@ -40,7 +46,6 @@ mode = 'full'
 
 
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
-lab_results_raw_directory = './lab_results_raw'     # data from software
 
 
 reference_parameter = 'Albumin'
@@ -66,7 +71,7 @@ while perform_merging_routine not in ['y', 'n']:
 
 if perform_merging_routine == 'y':
 
-    lab_results_directory = f'lab_results_per_patient/{current_date}'   # one file per patient
+    lab_results_directory = f'{directory_merged_results_per_patient}/{current_date}'   # one file per patient
 
     def save_excel_patient_sheet(df, dirname, filename):
 
@@ -100,9 +105,9 @@ if perform_merging_routine == 'y':
 
 if perform_merging_routine == 'n':
 
-    name_of_directory_to_use = os.listdir('lab_results_per_patient')[-1]
+    name_of_directory_with_most_recent_results = os.listdir(directory_merged_results_per_patient)[-1]
 
-    lab_results_directory = f'lab_results_per_patient/{name_of_directory_to_use}'   # one file per patient
+    lab_results_directory = f'{directory_merged_results_per_patient}/{name_of_directory_with_most_recent_results}'   # one file per patient
 
 
 
@@ -513,7 +518,7 @@ for s in range(number_of_sheets):
     # filename = f'{current_patient_one}-{current_patient_one+num_patients-1}-{current_date}.xlsx'
     filename = f'{current_date}.xlsx'
 
-    save_excel_sheet(df, 'COMPILED-SHEETS', filename, f'Sheet{s+1}')
+    save_excel_sheet(df, directory_final_sheet, filename, f'Sheet{s+1}')
 
 
 print('\nALL GOOD :)\n')
