@@ -1,0 +1,1 @@
+This folder contains output of merging process, i.e. result sheets in the same format of lab, one per patient. 
