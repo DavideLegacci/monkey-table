@@ -2,3 +2,4 @@
 *.csv
 parameters
 lab_tmp
+.DS_Store
