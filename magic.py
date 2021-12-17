@@ -18,6 +18,8 @@ negative_result = ''
 num_max_days = 23
 sub_period_duration = 7
 keep_kein_material = 'y'
+reference_parameter = 'Albumin'
+#reference_parameter = 'Proenkephalin'
 
 #mode = 'test'
 mode = 'full'
@@ -49,9 +51,6 @@ patients_map_path = 'patients_map.xlsx'
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
 
 
-reference_parameter = 'Albumin'
-#reference_parameter = 'Proenkephalin'
-
 def find_nearest(items, pivot):
     return min(items, key = lambda x:abs(x - pivot ))
 
@@ -71,8 +70,6 @@ def patNum2ID(num):
 
 def patID2Num(ID):
     return patients_map[ patients_map.PATIFALLNR == ID ].LFDNR.iloc[0]
-
-
 
 
 ####################################################################################################################################################################################
@@ -123,15 +120,11 @@ if perform_merging_routine == 'y':
             raise Exception(f'PATIFALLNR {p} is NOT matched in patients map.')
         if patID2Num(p) == '':
             raise Exception(f'PATIFALLNR {p} is in patients map, but it is not associated to a number')
-    print(j)
 
     print('Generating excel file for each patient...\n')
     for patient in tqdm(set(raw_df.PATIFALLNR)):
 
-        try:
-            patient_number = patID2Num(patient)
-        except:
-            raise Exception("The map between patient numbers and ID is not good.")
+        patient_number = patID2Num(patient)
         
         raw_df_patient = raw_df[raw_df.PATIFALLNR == patient]
 
@@ -139,6 +132,7 @@ if perform_merging_routine == 'y':
         save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
 
     print('\nALL GOOD :)\n Starting data manipulation.')
+    print(j)
 
 if perform_merging_routine == 'n':
 
