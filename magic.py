@@ -72,10 +72,6 @@ def patNum2ID(num):
 def patID2Num(ID):
     return patients_map[ patients_map.PatID == ID ].PatNum[0]
 
-print(f'Numero 4, ID {patNum2ID(4)}, numero { patID2Num( patNum2ID(4) ) }')
-print('....\n')
-print(j)
-
 
 ####################################################################################################################################################################################
 # END PATIENTS MAP
@@ -118,10 +114,15 @@ if perform_merging_routine == 'y':
 
     print('Generating excel file for each patient...\n')
     for patient in tqdm(set(raw_df.PATIFALLNR)):
+
+        try:
+            patient_number = patID2Num(patient)
+        except:
+            raise Exception("The map between patient numbers and ID is not good.")
         
         raw_df_patient = raw_df[raw_df.PATIFALLNR == patient]
 
-        filename = f'{patient}.xlsx'
+        filename = f'{patient_number}-{patient}.xlsx'
         save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
 
     print('\nALL GOOD :)\n Starting data manipulation.')
