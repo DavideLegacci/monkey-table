@@ -23,9 +23,9 @@ keep_kein_material = 'y'
 mode = 'full'
 
 # Dir names
-lab_results_raw_directory = './lab_results_raw'     # data from software
-directory_merged_results_per_patient = 'lab_results_per_patient'
-directory_final_sheet = 'COMPILED-SHEETS'
+lab_results_raw_directory = 'a_lab_results_raw'     # data from software
+directory_merged_results_per_patient = 'b_lab_results_per_patient'
+directory_final_sheet = 'c_final_sheet'
 
 ####################################################################################################################################################################################
 # END PARAMETERS TO EDIT
