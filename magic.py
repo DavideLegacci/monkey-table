@@ -102,13 +102,14 @@ if perform_merging_routine == 'y':
     raw_data = []
     for raw_result in os.listdir(lab_results_raw_directory):
         if raw_result.endswith(".csv") and not raw_result.startswith("~"):
-            print(raw_result)
+            print(f'\n Extracting data from {raw_result}...')
             # encoding https://stackoverflow.com/questions/42339876/error-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xff-in-position-0-in
             # separator https://stackoverflow.com/questions/18039057/python-pandas-error-tokenizing-data
             raw_data.append( pd.read_csv(f'{lab_results_raw_directory}/{raw_result}', encoding='cp1252', sep = ';', keep_default_na = False) )  
 
     # Merge into single
     raw_df = pd.concat( raw_data )
+    print('\n All raw results merged into single result!')
 
 
     patient_IDs_in_current_labresults = set(raw_df.PATIFALLNR)
@@ -117,11 +118,13 @@ if perform_merging_routine == 'y':
     #print(patient_IDs_in_patients_map)
     for p in patient_IDs_in_current_labresults:
         if p not in patient_IDs_in_patients_map:
+            print('\nCurrent patient IDs:\n')
+            [print(p) for p in patient_IDs_in_current_labresults ]
             raise Exception(f'PATIFALLNR {p} is NOT matched in patients map.')
         if patID2Num(p) == '':
             raise Exception(f'PATIFALLNR {p} is in patients map, but it is not associated to a number')
 
-    print('Generating excel file for each patient...\n')
+    print('\n Generating lab results file for each patient...\n')
     for patient in tqdm(set(raw_df.PATIFALLNR)):
 
         patient_number = patID2Num(patient)
@@ -131,8 +134,9 @@ if perform_merging_routine == 'y':
         filename = f'{patient_number}-{patient}.xlsx'
         save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
 
-    print('\nALL GOOD :)\n Starting data manipulation.')
-    print(j)
+    print('\n-----------------------------------------------------------------------------------------------------------------------------------------')
+    print('ALL GOOD :)\n Starting data manipulation.')
+    print('-----------------------------------------------------------------------------------------------------------------------------------------\n')
 
 if perform_merging_routine == 'n':
 
@@ -216,7 +220,7 @@ elif mode == 'test':
 
 
 num_patients = 0
-patient_identifier_ids = []
+patient_identifier_PATIFALLNR = []
 
 # Multiple sheets
 
@@ -235,7 +239,7 @@ for patient in tqdm(os.listdir(lab_results_directory)):
     if patient.endswith(".xlsx") and not patient.startswith("~"):
 
         num_patients +=1
-        #patient_identifier_ids.append(patient)
+        #patient_identifier_PATIFALLNR.append(patient)
         #print(f'processing patient {patient}...')
 
         # START MERGING DATAFRAME
@@ -511,17 +515,20 @@ for patient in tqdm(os.listdir(lab_results_directory)):
 
         # each element of big_data_multiple_sheets is to be treated as big_data
 
-        patient_identifier_ids.append(data['PATIFALLNR'][0])
+        patient_identifier_PATIFALLNR.append(data['PATIFALLNR'][0])
 
 
 ####################################################################################################################################################################################
 # END DATA MANIPULATION ROUTINE FOR EACH PATIENT
 ####################################################################################################################################################################################
-print('\n Patient loop completed! \n Writing in excel...')
+print('\n Patient loop completed!')
 ####################################################################################################################################################################################
 # START WRITING TO FINAL SHEET
 ####################################################################################################################################################################################
-
+print('\n Creating patient map, first step...')
+patient_identifier_PATIFALLNR_last_digit_separated = [ f'{str(i)[:-1]}_{str(i)[-1:]}' for i in tqdm(patient_identifier_PATIFALLNR)  ]
+print('\n Creating patient map, second step...')
+patient_identifier_final = [ f'{patID2Num( patient_identifier_PATIFALLNR[i] )} - {patient_identifier_PATIFALLNR_last_digit_separated[i]}' for i in tqdm(range(len(patient_identifier_PATIFALLNR_last_digit_separated))) ]
 
 dims = ['patient', 'parameter', 'day']
 
@@ -538,10 +545,10 @@ def save_excel_sheet(df, dirname, filename, sheetname):
             df.to_excel(writer, sheet_name=sheetname)
 
 
-
-for s in range(number_of_sheets):
+print('\n Starting to write in Excel sheets...')
+for s in tqdm(range(number_of_sheets)):
     #coords = {'patient':range(current_patient_one, current_patient_one+num_patients), 'parameter':all_needed_parameters, 'day':split_days[s] }
-    coords = {'patient':patient_identifier_ids, 'parameter':all_needed_parameters, 'day':split_days[s] }
+    coords = {'patient':patient_identifier_final, 'parameter':all_needed_parameters, 'day':split_days[s] }
     data = xr.DataArray(big_data_multiple_sheets[s], dims = dims, coords = coords )
     df = data.to_dataframe('value')
     df = data.to_series().unstack(level=[1,2])
