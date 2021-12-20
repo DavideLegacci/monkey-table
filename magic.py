@@ -69,6 +69,8 @@ natsort = lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('(\d
 # START PATIENTS MAP
 ####################################################################################################################################################################################
 patients_map = pd.read_excel(patients_map_path, keep_default_na = False)
+patients_map['DAY0'] = pd.to_datetime(patients_map['DAY0'], dayfirst = True)
+
 
 
 def patNum2ID(num):
@@ -227,6 +229,9 @@ elif mode == 'test':
 
 num_patients = 0
 patient_identifier_PATIFALLNR = []
+day0_all_patients = []
+
+
 
 # Multiple sheets
 
@@ -245,6 +250,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
     if patient.endswith(".xlsx") and not patient.startswith("~"):
 
         num_patients +=1
+
         #print(f'processing patient {patient}...')
 
         # START MERGING DATAFRAME
@@ -297,7 +303,8 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
         # Add column only with info about day
         data = data.assign(DAY=data['VALIDIERTDAT'].dt.strftime('%Y-%m-%d'))
-        #data['DAY'] = pd.to_datetime(data['DAY'], dayfirst = True)
+        # ---------------------------------------------------------------------------------------------------
+        # CAREFUL! NOW data.DAY contains STRINGS, not datetimes!
 
         #START GETTING RID OF kein material ROWS
         if keep_kein_material == 'n':
@@ -418,7 +425,23 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
         # CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------------------------------------------------------------------------- temporary
         # Get patient day0 = when she enters hospital
 
-        day0 = min(data.DAY)
+        current_patient_PATIFALLNR = data['PATIFALLNR'][0]
+
+        day_of_first_exam = min(data.DAY)
+
+
+        # SWITCH THIS ON ONCE REAL DATA FOR DAY 0 IS AVAILABLE; NOW SIMULATE
+        # day0 = patients_map[ patients_map.PATIFALLNR == current_patient_PATIFALLNR ].DAY0.iloc[0].strftime('%Y-%m-%d')
+
+        # simulate day0 as day of first exam; to switch off once real data for time0 is available
+        day0 = day_of_first_exam 
+
+        day0_all_patients.append(day0)
+
+        
+        if day0 > day_of_first_exam:
+            raise Exception(f'For patient {patient} day 0 is {day0} but first exam is done on {day_of_first_exam}')
+       
 
 
         # Get range of time in which exams are taken
@@ -520,7 +543,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
         # each element of big_data_multiple_sheets is to be treated as big_data
 
-        patient_identifier_PATIFALLNR.append(data['PATIFALLNR'][0])
+        patient_identifier_PATIFALLNR.append(current_patient_PATIFALLNR)
 
 
 ####################################################################################################################################################################################
@@ -533,7 +556,7 @@ print('\n Patient loop completed!')
 print('\n Creating patient map, first step...')
 patient_identifier_PATIFALLNR_last_digit_separated = [ f'{str(i)[:-1]}_{str(i)[-1:]}' for i in tqdm(patient_identifier_PATIFALLNR)  ]
 print('\n Creating patient map, second step...')
-patient_identifier_final = [ f'{patID2Num( patient_identifier_PATIFALLNR[i] )} - {patient_identifier_PATIFALLNR_last_digit_separated[i]}' for i in tqdm(range(len(patient_identifier_PATIFALLNR_last_digit_separated))) ]
+patient_identifier_final = [ f'{patID2Num( patient_identifier_PATIFALLNR[i] )} - {patient_identifier_PATIFALLNR_last_digit_separated[i]} - {day0_all_patients[i]}' for i in tqdm(range(len(patient_identifier_PATIFALLNR_last_digit_separated))) ]
 
 dims = ['patient', 'parameter', 'day']
 
