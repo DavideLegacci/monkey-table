@@ -5,6 +5,8 @@ from datetime import datetime
 import numpy as np
 import xarray as xr
 from tqdm import tqdm
+import re
+
 
 # print(data)
 
@@ -53,6 +55,10 @@ current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-
 
 def find_nearest(items, pivot):
     return min(items, key = lambda x:abs(x - pivot ))
+
+# key for natural sorting
+# https://stackoverflow.com/questions/4836710/is-there-a-built-in-function-for-string-natural-sort
+natsort = lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('(\d+)', s)]
 
 ####################################################################################################################################################################################
 # END METADATA
@@ -234,12 +240,11 @@ big_data_multiple_sheets = [  [ ] for _ in range(number_of_sheets)  ]
 
 # Read each excel file in lab_results_directory into dataframe and put it into data_list
 print('\n Starting patients loop...')
-for patient in tqdm(os.listdir(lab_results_directory)):
+for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
     # make sure to select only excel files; sometimes hidden files like ~$patient.xlsx are created, which must be excluded:
     if patient.endswith(".xlsx") and not patient.startswith("~"):
 
         num_patients +=1
-        #patient_identifier_PATIFALLNR.append(patient)
         #print(f'processing patient {patient}...')
 
         # START MERGING DATAFRAME
