@@ -5,67 +5,16 @@ from datetime import datetime, timedelta
 import numpy as np
 import xarray as xr
 from tqdm import tqdm
-import re
 
-
-# print(data)
-
-####################################################################################################################################################################################
-# START PARAMETERS TO EDIT
-####################################################################################################################################################################################
-
-empty_result = ''
-positive_result = '1'
-negative_result = ''
-num_max_days = 23
-sub_period_duration = 7
-keep_kein_material = 'y'
-reference_parameter = 'Albumin'
-#reference_parameter = 'Proenkephalin'
-
-#mode = 'test'
-mode = 'full'
-
-# Names
-lab_results_raw_directory = 'a_lab_results_raw'     # data from software
-directory_merged_results_per_patient = 'b_lab_results_per_patient'
-directory_final_sheet = 'c_final_sheet'
-patients_map_path = 'patients_map.xlsx'
-
-####################################################################################################################################################################################
-# END PARAMETERS TO EDIT
-####################################################################################################################################################################################
-
+from program_parameters import *
+from myutils import *
 
 
 ####################################################################################################################################################################################
 # START METADATA
 ####################################################################################################################################################################################
 
-
-
-# if mode == 'full':
-#   keep_kein_material = ''
-#   while keep_kein_material not in ['y', 'n']:
-#       keep_kein_material = input("\nShould I keep 'Kein Material' results? Type y or n: ")
-
-
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
-
-
-def find_nearest(items, pivot):
-    return min(items, key = lambda x:abs(x - pivot ))
-
-def generate_parameters():
-    with open('parameters.txt') as file:
-        lines = file.readlines()
-        lines = [line.rstrip() for line in lines]
-
-    return(lines)
-
-# key for natural sorting
-# https://stackoverflow.com/questions/4836710/is-there-a-built-in-function-for-string-natural-sort
-natsort = lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('(\d+)', s)]
 
 ####################################################################################################################################################################################
 # END METADATA
@@ -209,20 +158,10 @@ def dictionary_values_splitter(dictionary_to_split):
 def dict_of_lists_to_list_of_dicts(dict_of_lists):
     return [ dict(zip(dict_of_lists, i)) for i in zip(*dict_of_lists.values()) ]
 
-# <---------------------------------------------------- the parameters marked red in the numbers sheet must be added?
-# This contains all 29 parameters in the order or Rebecca's work sheet; those marked red have -temp names, meaning I could not find them in lab sheet.
-# Must find a lab sheet that contains them, and see how they are called
-
-# TEST
-
-
-# FIRST 29
-#first_29_parameters  = ['tacro-temp', 'ciclo-temp', 'Natrium(ISE)', 'Kalium (ISE)', 'Calcium', 'Kreatinin', 'Proenkephalin', 'GFR, CKD-EPI', 'Harnstoff', 'Glucose', 'LDH', 'GOT/AST', 'GPT/ALT', 'AP', 'GGT', 'bili-temp', 'Phosphat', 'Ges.Eiweiss', 'Albumin quant.', 'CRP', 'Leukozyten', 'Hb', 'Thrombozyten', 'ntpro-temp', 'tnt-temp', 'INR - ber.', 'Quick', 'aPTT', 'ipth-temp']
-
-# NEW 17
-#new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
 
 testing_parameters = ['Albumin', 'C-reaktives Protein (CRP)', 'GFR nach CKD-EPI']
+
+# Real parameters are read from parameters.txt
 all_parameters_final = generate_parameters()
 
 if mode == 'full':
