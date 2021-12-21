@@ -79,16 +79,14 @@ if perform_merging_routine == 'y':
 
 	# Merge into single
 	raw_df = pd.concat( raw_data )
+	raw_df = raw_df.astype({"PATIFALLNR": int})
+
 	print('\n All raw results merged into single result!')
 
-	print(raw_df)
-	print(j)
-
-
 	patient_IDs_in_current_labresults = set(raw_df.PATIFALLNR)
-	print(patient_IDs_in_current_labresults)
+	#print(patient_IDs_in_current_labresults)
 	patient_IDs_in_patients_map = set(patients_map.PATIFALLNR)
-	print(patient_IDs_in_patients_map)
+	#print(patient_IDs_in_patients_map)
 	#patients_in_current_labresults_not_in_map = patient_IDs_in_current_labresults - patient_IDs_in_patients_map
 	patients_in_current_labresults_not_in_map = [p for p in patient_IDs_in_current_labresults if p not in patient_IDs_in_patients_map]
 	if len(patients_in_current_labresults_not_in_map) > 0:
@@ -103,8 +101,6 @@ if perform_merging_routine == 'y':
 		[print(p) for p in patients_in_map_but_number_missing ]
 		print()
 		raise Exception('\n\nAdd a number to these patients in patient map.\n')
-
-	print(j	)
 
 	print('\n Generating lab results file for each patient...\n')
 	for patient in tqdm(set(raw_df.PATIFALLNR)):
@@ -145,6 +141,8 @@ def period_maker():
 	'''Returns [7, 7, 7, 2] if num_max_days = 23 and sub_period_duration = 7'''
 	if num_max_days < sub_period_duration:
 		raise Exception('First input must be >= second')
+	if num_max_days % sub_period_duration == 0:
+		raise Exception(f'\n\nFor technical reasons num_max_days {num_max_days} cannot be a multiple of sub_period_duration {sub_period_duration}. To resolve set for example num_max_days to {num_max_days+1}.\n ')
 	num_full_sub_periods = int(num_max_days/sub_period_duration)
 	days_in_final_subperiod = num_max_days % sub_period_duration
 	period_list = [sub_period_duration for _ in range(num_full_sub_periods)]
