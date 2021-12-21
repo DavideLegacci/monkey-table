@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 import xarray as xr
 from tqdm import tqdm
@@ -70,7 +70,6 @@ natsort = lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('(\d
 ####################################################################################################################################################################################
 patients_map = pd.read_excel(patients_map_path, keep_default_na = False)
 patients_map['DAY0'] = pd.to_datetime(patients_map['DAY0'], dayfirst = True)
-
 
 
 def patNum2ID(num):
@@ -303,8 +302,9 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
         # Add column only with info about day
         data = data.assign(DAY=data['VALIDIERTDAT'].dt.strftime('%Y-%m-%d'))
+        data['DAY'] = pd.to_datetime(data['DAY'], dayfirst = True)
+        # This way DAY contains datetime objects, but keeps only year, month and date forgetting about hour, minute and second
         # ---------------------------------------------------------------------------------------------------
-        # CAREFUL! NOW data.DAY contains STRINGS, not datetimes!
 
         #START GETTING RID OF kein material ROWS
         if keep_kein_material == 'n':
@@ -431,20 +431,18 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 
         # SWITCH THIS ON ONCE REAL DATA FOR DAY 0 IS AVAILABLE; NOW SIMULATE
-        # day0 = patients_map[ patients_map.PATIFALLNR == current_patient_PATIFALLNR ].DAY0.iloc[0].strftime('%Y-%m-%d')
+        #day0 = patients_map[ patients_map.PATIFALLNR == current_patient_PATIFALLNR ].DAY0.iloc[0] #.strftime('%Y-%m-%d')
 
-        # simulate day0 as day of first exam; to switch off once real data for time0 is available
-        day0 = day_of_first_exam 
+        # simulate day0 as day before day of first exam; to switch off once real data for time0 is available
+        day0 = day_of_first_exam - timedelta(days = 1)
 
         day0_all_patients.append(day0)
 
-        
         if day0 > day_of_first_exam:
-            raise Exception(f'For patient {patient} day 0 is {day0} but first exam is done on {day_of_first_exam}')
+            raise Exception(f'\nFor patient {patient} day 0 is {day0} but first exam is done on {day_of_first_exam}\n')
        
 
-
-        # Get range of time in which exams are taken
+        # Get range of time in which exams are taken; not really used anywhere
         day_first_exam, day_last_exam = min(data.VALIDIERTDAT), max(data.VALIDIERTDAT)
         exam_period = day_last_exam - day_first_exam
         # print(exam_period)
@@ -455,7 +453,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
             raise Exception
 
         # Set maximal period of staying in the hospital; equal for everybody
-        period = pd.date_range(start=day0, periods=num_max_days).strftime('%Y-%m-%d')
+        period = pd.date_range(start=day0, periods=num_max_days)
         # print(period)
 
         # PARAMETERS TO KEEP 
@@ -553,10 +551,11 @@ print('\n Patient loop completed!')
 ####################################################################################################################################################################################
 # START WRITING TO FINAL SHEET
 ####################################################################################################################################################################################
-print('\n Creating patient map, first step...')
-patient_identifier_PATIFALLNR_last_digit_separated = [ f'{str(i)[:-1]}_{str(i)[-1:]}' for i in tqdm(patient_identifier_PATIFALLNR)  ]
-print('\n Creating patient map, second step...')
-patient_identifier_final = [ f'{patID2Num( patient_identifier_PATIFALLNR[i] )} - {patient_identifier_PATIFALLNR_last_digit_separated[i]} - {day0_all_patients[i]}' for i in tqdm(range(len(patient_identifier_PATIFALLNR_last_digit_separated))) ]
+#print('\n Creating patient map, first step...')
+patient_identifier_PATIFALLNR_last_digit_separated = [ f'{str(i)[:-1]}_{str(i)[-1:]}' for i in patient_identifier_PATIFALLNR  ]
+#print('\n Creating patient map, second step...')
+day0_all_patients_string = [d.strftime('%d-%m-%Y') for d in day0_all_patients]
+patient_identifier_final = [ f'{patID2Num( patient_identifier_PATIFALLNR[i] )} - {patient_identifier_PATIFALLNR_last_digit_separated[i]} - {day0_all_patients_string[i]}' for i in range(len(patient_identifier_PATIFALLNR_last_digit_separated)) ]
 
 dims = ['patient', 'parameter', 'day']
 
