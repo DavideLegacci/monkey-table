@@ -56,6 +56,13 @@ current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-
 def find_nearest(items, pivot):
     return min(items, key = lambda x:abs(x - pivot ))
 
+def generate_parameters():
+    with open('parameters.txt') as file:
+        lines = file.readlines()
+        lines = [line.rstrip() for line in lines]
+
+    return(lines)
+
 # key for natural sorting
 # https://stackoverflow.com/questions/4836710/is-there-a-built-in-function-for-string-natural-sort
 natsort = lambda s: [int(t) if t.isdigit() else t.lower() for t in re.split('(\d+)', s)]
@@ -216,7 +223,7 @@ def dict_of_lists_to_list_of_dicts(dict_of_lists):
 #new_17_parameters = ['pH/Tstr.', 'Glucose/Tstr.', 'Bili/Tstr.', 'Ketone /Tstr.', 'Erys /Tstr.', 'Eiweiß/Tstr.', 'Urobil /Tstr.', 'Nitrit /Tstr.', 'Leuko /Tstr.', 'U-Albumin', 'Protein/Urin', 'Eiweiss-temp', 'Erys/µl', 'Leuko/µl', 'platten-temp', 'Bakt./Sedu.', 'HyalZy./Sedu.']
 
 testing_parameters = ['Albumin', 'C-reaktives Protein (CRP)', 'GFR nach CKD-EPI']
-all_parameters_final = ['Tacrolimus ( MS )', 'Ciclosporin MC ( MS )', 'Natrium', 'Kalium', 'Calcium, korrigiert', 'Kreatinin', 'Proenkephalin', 'GFR nach CKD-EPI', 'Harnstoff', 'Glucose', 'Laktatdehydrogenase (LDH)', 'Glutamat-Oxalacetat-Transaminase/Aspartat-Aminotransferase (GOT/AST)', 'Glutamat-Pyruvat-Transaminase/Alanin-Aminotransferase (GPT/ALT)', 'Alkalische Phosphatase (AP)', 'gamma-Glutamyltransferase (GGT)', 'Bilirubin, gesamt', 'Phosphat', 'Gesamteiwei¤', 'Albumin', 'Procalcitonin (PCT), sensitiv', 'C-reaktives Protein (CRP)', 'Leukozyten', 'H_moglobin (Hb)', 'H_matokrit', 'Thrombozyten', 'n-terminal pro-brain natriuretic peptide (NT-ProBNP)', 'Troponin T (TNT), high sensitive im Plasma', 'International Normalized Ratio (INR)-berechnet', 'Quick', 'partielle Thromboplastinzeit, aktiviert (aPTT)', 'Parathormon (PTH), intakt', 'Triglyceride', 'Albumin im Urin / Kreatinin im Urin', 'pH-Wert im Urin (Teststreifen)', 'Nitrit im Urin (Teststreifen)', 'Eiwei¤ im Urin (Teststreifen)', 'Glucose im Urin (Teststreifen)', 'Ketonk_rper im Urin (Teststreifen)', 'Urobilinogen im Urin (Teststreifen)', 'Bilirubin im Urin (Teststreifen)', 'Bakterien im Urin/µl', 'Erythrozyten im Urin, absolut', 'Leukozyten im Urin, absolut', 'Granulierte Zylinder/µl', 'Plattenepithelien im Urin, absolut', 'Hyaline Zylinder/µl', 'Rundepithelien/µl', 'Eiweiß im Urin / d', 'pH-Wert, arteriell', 'Kohlendioxidpartialdruck (pCO2), arteriell', 'Sauerstoffpartialdruck (pO2), arteriell', 'Base Excess, arteriell', 'Standard-Bicarbonat, arteriell']
+all_parameters_final = generate_parameters()
 
 if mode == 'full':
     all_needed_parameters = all_parameters_final # first_29_parameters + new_17_parameters
@@ -229,8 +236,6 @@ elif mode == 'test':
 num_patients = 0
 patient_identifier_PATIFALLNR = []
 day0_all_patients = []
-
-
 
 # Multiple sheets
 
@@ -587,9 +592,3 @@ for s in tqdm(range(number_of_sheets)):
 
 
 print('\nALL GOOD :)\n')
-
-
-
-
-
-
