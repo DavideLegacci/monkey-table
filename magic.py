@@ -398,30 +398,46 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 					# print('debug------------------')
 					# print()
 					#####
+
+					# IF THERE IS PENKID COMPARE WITH PENKID
 					try:
 						# reference_df = data[ data.BESCHREIBUNG == reference_parameter ]
 						# reference_df = reference_df[ reference_df.DAY == current_day ]
 						reference_time = list(reference_df.LABEINDAT)[0]
+
+						# IF THERE IS NUMERICAL RESULT, TAKE NUMERICAL CLOSET TO PENKID
 						try:
 							closest_time = find_nearest( df_duplicated_p_day[df_duplicated_p_day.ERGEBNIST.map(type)==float].LABEINDAT, reference_time ) 
+
+						# IF NO RESULT IS NUMERICAL, TAKE CLOSEST TO PENKID
 						except:
 							closest_time = find_nearest( df_duplicated_p_day.LABEINDAT, reference_time )
+
 						index_to_keep = df_duplicated_p_day.index[df_duplicated_p_day['LABEINDAT'] == closest_time].tolist()[0]
 						# print('Comparison done')
 						# print(f'reference_time: {reference_time}')
+
+					# IF THERE IS NO PENKID TAKE THE FIRST RESULT OF THE DAY
 					except:
+
+						# IF THERE IS NUMERICAL RESULT, TAKE FIRST NUMERICAL
 						try:
 							index_to_keep = df_duplicated_p_day[df_duplicated_p_day.ERGEBNIST.map(type)==float]['LABEINDAT'].idxmin()
+
+						# IF THERE IS NO NUMERICAL RESULT, TAKE FIRST 
 						except:
 							index_to_keep = df_duplicated_p_day['LABEINDAT'].idxmin()
 					#     print('Just kept first')
 					# print(f'Index to keep: {index_to_keep}\n')
+
+					# DROP DUPLICATES
 
 					for i in df_duplicated_p_day.index:
 						if str(i) != str(index_to_keep):
 							data.drop(i, inplace = True)
 
 		data.reset_index(inplace = True, drop = True)
+		
 		# Reconvert results to number like 3,4 rather than 3.4, so that excel is happy.. #-------------------------------------------------------------------------------------------
 		# Alternative: in Excel use dot as float separator https://www.officetooltips.com/excel_2016/tips/change_the_decimal_point_to_a_comma_or_vice_versa.html
 		for i in range(len(data.ERGEBNIST)):
