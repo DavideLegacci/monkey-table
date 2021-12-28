@@ -364,15 +364,9 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 			data.reset_index(inplace = True, drop = True)
 			#input(f'\n ---- ALERT----- \n\n Reference parameter {reference_parameter} appears more than once per day. Keeping first of each day. Enter to continue' )
 
-		# Reconvert results to number like 3,4 rather than 3.4, so that excel is happy.. #-------------------------------------------------------------------------------------------
-		# Alternative: in Excel use dot as float separator https://www.officetooltips.com/excel_2016/tips/change_the_decimal_point_to_a_comma_or_vice_versa.html
-		for i in range(len(data.ERGEBNIST)):
-			if type( data.at[i, 'ERGEBNIST'] ) is float:
-				data.at[i, 'ERGEBNIST'] = str(data.at[i, 'ERGEBNIST'])
-				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('.', ',')
-
 
 		##############################################
+		# Now deal with duplicates of all other parameters
 
 		# OPTION 1
 		#data.drop_duplicates( ['Parameter', 'LABEINDAT'], keep = 'first', inplace = True, ignore_index = True  )
@@ -408,12 +402,18 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 						# reference_df = data[ data.BESCHREIBUNG == reference_parameter ]
 						# reference_df = reference_df[ reference_df.DAY == current_day ]
 						reference_time = list(reference_df.LABEINDAT)[0]
-						closest_time = find_nearest( df_duplicated_p_day.LABEINDAT, reference_time )
+						try:
+							closest_time = find_nearest( df_duplicated_p_day[df_duplicated_p_day.ERGEBNIST.map(type)==float].LABEINDAT, reference_time ) 
+						except:
+							closest_time = find_nearest( df_duplicated_p_day.LABEINDAT, reference_time )
 						index_to_keep = df_duplicated_p_day.index[df_duplicated_p_day['LABEINDAT'] == closest_time].tolist()[0]
 						# print('Comparison done')
 						# print(f'reference_time: {reference_time}')
 					except:
-						index_to_keep = df_duplicated_p_day['LABEINDAT'].idxmin()
+						try:
+							index_to_keep = df_duplicated_p_day[df_duplicated_p_day.ERGEBNIST.map(type)==float]['LABEINDAT'].idxmin()
+						except:
+							index_to_keep = df_duplicated_p_day['LABEINDAT'].idxmin()
 					#     print('Just kept first')
 					# print(f'Index to keep: {index_to_keep}\n')
 
@@ -422,6 +422,12 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 							data.drop(i, inplace = True)
 
 		data.reset_index(inplace = True, drop = True)
+		# Reconvert results to number like 3,4 rather than 3.4, so that excel is happy.. #-------------------------------------------------------------------------------------------
+		# Alternative: in Excel use dot as float separator https://www.officetooltips.com/excel_2016/tips/change_the_decimal_point_to_a_comma_or_vice_versa.html
+		for i in range(len(data.ERGEBNIST)):
+			if type( data.at[i, 'ERGEBNIST'] ) is float:
+				data.at[i, 'ERGEBNIST'] = str(data.at[i, 'ERGEBNIST'])
+				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('.', ',')
 
 
 		# END GETTING RID OF DUPLICATE EXAM # ----------
