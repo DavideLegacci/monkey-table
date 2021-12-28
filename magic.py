@@ -404,10 +404,10 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 
 		# SWITCH THIS ON ONCE REAL DATA FOR DAY 0 IS AVAILABLE; NOW SIMULATE
-		#day0 = patients_map[ patients_map.PATIFALLNR == current_patient_PATIFALLNR ].DAY0.iloc[0] #.strftime('%Y-%m-%d')
+		day0 = patients_map[ patients_map.PATIFALLNR == current_patient_PATIFALLNR//10 ].DAY0.iloc[0] #.strftime('%Y-%m-%d')
 
 		# simulate day0 as day before day of first exam; to switch off once real data for time0 is available
-		day0 = day_of_first_exam - timedelta(days = 1)
+		#day0 = day_of_first_exam - timedelta(days = 1)
 
 		day0_all_patients.append(day0)
 
