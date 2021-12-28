@@ -25,15 +25,16 @@ nan_value = float("NaN")
 
 
 ####################################################################################################################################################################################
-# START PATIENTS MAP
+# START PATIENTS MAP 8-digit!
 ####################################################################################################################################################################################
 patients_map = pd.read_excel(patients_map_path, keep_default_na = False)
 patients_map['DAY0'] = pd.to_datetime(patients_map['DAY0'], dayfirst = True)
 
+# this function returns 8-digit identifier
+#def patNum2ID(num):
+#	return patients_map[ patients_map.LFDNR == num ].PATIFALLNR.iloc[0]
 
-def patNum2ID(num):
-	return patients_map[ patients_map.LFDNR == num ].PATIFALLNR.iloc[0]
-
+# this function takes 8-digit identifier
 def patID2Num(ID):
 	return patients_map[ patients_map.PATIFALLNR == ID ].LFDNR.iloc[0]
 
@@ -83,29 +84,39 @@ if perform_merging_routine == 'y':
 
 	print('\n All raw results merged into single result!')
 
+
+	# 9-digit
 	patient_IDs_in_current_labresults = set(raw_df.PATIFALLNR)
 	#print(patient_IDs_in_current_labresults)
+
+	# 8-digit
 	patient_IDs_in_patients_map = set(patients_map.PATIFALLNR)
 	#print(patient_IDs_in_patients_map)
 	#patients_in_current_labresults_not_in_map = patient_IDs_in_current_labresults - patient_IDs_in_patients_map
-	patients_in_current_labresults_not_in_map = [p for p in patient_IDs_in_current_labresults if p not in patient_IDs_in_patients_map]
+
+	# 9-digit
+	patients_in_current_labresults_not_in_map = [p for p in patient_IDs_in_current_labresults if p//10 not in patient_IDs_in_patients_map]
 	if len(patients_in_current_labresults_not_in_map) > 0:
 		print('\nThese patients are NOT matched in patients map\n')
-		[print(p) for p in patients_in_current_labresults_not_in_map ]
+		[print(p//10) for p in patients_in_current_labresults_not_in_map ]
 		print()
 		raise Exception('\n\nAdd these patients to patient map.\n')
 
-	patients_in_map_but_number_missing = [ p for p in patient_IDs_in_current_labresults if patID2Num(p) == '']
+	# 9-digit
+	patients_in_map_but_number_missing = [ p for p in patient_IDs_in_current_labresults if patID2Num(p//10) == '']
 	if len(patients_in_map_but_number_missing) > 0:
 		print('\nThese PATIFALLNR patients are in patients map, but not associated to number\n')
-		[print(p) for p in patients_in_map_but_number_missing ]
+		[print(p//10) for p in patients_in_map_but_number_missing ]
 		print()
 		raise Exception('\n\nAdd a number to these patients in patient map.\n')
 
 	print('\n Generating lab results file for each patient...\n')
+
+	# patient is 9-digit identifier
 	for patient in tqdm(set(raw_df.PATIFALLNR)):
 
-		patient_number = patID2Num(patient)
+		# patient_number is rebecca identifer
+		patient_number = patID2Num(patient//10)
 		
 		raw_df_patient = raw_df[raw_df.PATIFALLNR == patient]
 
@@ -386,6 +397,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		# CAREFUL ACTUALLY DAY0 IS FROM EXTERNAL SOURCE, IT MAY BE THAT NO EXAM IS TAKEN ON DAY 0 <------------------------------------------------------------------------------------------------------------------- temporary
 		# Get patient day0 = when she enters hospital
 
+		# 9-digit identifier
 		current_patient_PATIFALLNR = data['PATIFALLNR'][0]
 
 		day_of_first_exam = min(data.DAY)
@@ -502,6 +514,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 		# each element of big_data_multiple_sheets is to be treated as big_data
 
+		# contains 9-digit identifiers
 		patient_identifier_PATIFALLNR.append(current_patient_PATIFALLNR)
 
 
@@ -516,7 +529,7 @@ print('\n Patient loop completed!')
 patient_identifier_PATIFALLNR_last_digit_separated = [ f'{str(i)[:-1]}_{str(i)[-1:]}' for i in patient_identifier_PATIFALLNR  ]
 #print('\n Creating patient map, second step...')
 day0_all_patients_string = [d.strftime('%d-%m-%Y') for d in day0_all_patients]
-patient_identifier_final = [ f'{patID2Num( patient_identifier_PATIFALLNR[i] )} - {patient_identifier_PATIFALLNR_last_digit_separated[i]} - {day0_all_patients_string[i]}' for i in range(len(patient_identifier_PATIFALLNR_last_digit_separated)) ]
+patient_identifier_final = [ f'{patID2Num( patient_identifier_PATIFALLNR[i]//10 )} - {patient_identifier_PATIFALLNR_last_digit_separated[i]} - {day0_all_patients_string[i]}' for i in range(len(patient_identifier_PATIFALLNR_last_digit_separated)) ]
 
 dims = ['patient', 'parameter', 'day']
 
