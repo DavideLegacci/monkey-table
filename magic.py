@@ -132,7 +132,7 @@ if perform_merging_routine == 'y':
 
 if perform_merging_routine == 'n':
 
-	name_of_directory_with_most_recent_results = os.listdir(directory_merged_results_per_patient)[-1]
+	name_of_directory_with_most_recent_results = [directory for directory in sorted(os.listdir(directory_merged_results_per_patient), key=natsort) if not directory.startswith('.')][-1]
 
 	lab_results_directory = f'{directory_merged_results_per_patient}/{name_of_directory_with_most_recent_results}'   # one file per patient
 
