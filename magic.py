@@ -418,7 +418,12 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		data = data[ data.DAY >= day0 ]
 		# END GETTING RID OF EXAMS DOBE BEFORE DAY 0
 
-		day_of_first_exam = min(data.DAY)
+	
+		try:
+			day_of_first_exam = min(data.DAY)
+		except:
+			raise Exception(f"It could be that every exam is done after day0; check patient map for patient {patient} ")
+
 
 		if day0 > day_of_first_exam:
 			raise Exception(f'\nFor patient {patient} day 0 is {day0} but first exam is done on {day_of_first_exam}\n')
