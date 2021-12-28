@@ -89,6 +89,7 @@ if perform_merging_routine == 'y':
 
 	# 9-digit
 	patient_IDs_in_current_labresults = set(raw_df.PATIFALLNR)
+	patient_IDs_in_current_labresults_8_digit = set([p//10 for p in raw_df.PATIFALLNR])
 	#print(patient_IDs_in_current_labresults)
 
 	# 8-digit
@@ -99,21 +100,23 @@ if perform_merging_routine == 'y':
 	# 9-digit
 	patients_in_current_labresults_not_in_map = [p for p in patient_IDs_in_current_labresults if p//10 not in patient_IDs_in_patients_map]
 	if len(patients_in_current_labresults_not_in_map) > 0:
-		print('\nFor your information, These patients are NOT matched in patients map\n')
+		print('\nFor your information, These patients are NOT matched in patients map, but this is not an error.\n')
 		[print(p//10) for p in patients_in_current_labresults_not_in_map ]
 		print()
 
 	# 9-digit
-	patients_in_map_but_number_missing = [ p for p in patient_IDs_in_current_labresults if patID2Num(p//10) == '']
+	patients_in_map_but_number_missing = [ p for p in patient_IDs_in_patients_map if patID2Num(p) == '']
 	if len(patients_in_map_but_number_missing) > 0:
-		print('\nFor your information, These PATIFALLNR patients are in patients map, but not associated to number\n')
-		[print(p//10) for p in patients_in_map_but_number_missing ]
+		[print(p) for p in patients_in_map_but_number_missing ]
 		print()
+		raise Exception('\nThese PATIFALLNR patients are in patients map, but not associated to number.\n')
 
-	print('\n Generating lab results file for each patient in patients map...\n')
+	print('\n Generating lab results file for each patient in patients map and in current result sheet...\n')
+
+	patients_in_current_labresults_and_in_map_8_digit = patient_IDs_in_current_labresults_8_digit.intersection(patient_IDs_in_patients_map)
 
 	# patient is 8-digit identifier
-	for patient in tqdm(patient_IDs_in_patients_map):
+	for patient in tqdm(patients_in_current_labresults_and_in_map_8_digit):
 
 		# patient_number is rebecca identifer
 		patient_number = patID2Num(patient)
@@ -255,25 +258,25 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 		# drop not needed columns
 		#not_needed_columns = ['AUFTRAGNR', 'GEBDAT', 'SEX', 'EINSCODE', 'LABEINDAT']
-		needed_columns = ['PATIFALLNR', 'BESCHREIBUNG', 'ERGEBNIST', 'VALIDIERTDAT']
+		needed_columns = ['PATIFALLNR', 'BESCHREIBUNG', 'ERGEBNIST', 'LABEINDAT']
 		for col in data.columns:
 			if col not in needed_columns:
 				data.drop(col, axis = 1, inplace = True)
 
 
 		# Fix dates format
-		# for i in range(len(data.VALIDIERTDAT)):
+		# for i in range(len(data.LABEINDAT)):
 
 		#   # Some dates were recognized by pandas already as datetimes; other are still strings because 1. they contain spaces and 2. they contain . rather than /
-		#   if type( data.at[i, 'VALIDIERTDAT'] ) is str:
-		#       data.at[i, 'VALIDIERTDAT'] = data.at[i, 'VALIDIERTDAT'].replace(' ', '')
-		#       data.at[i, 'VALIDIERTDAT'] = data.at[i, 'VALIDIERTDAT'].replace('.', '/')   
+		#   if type( data.at[i, 'LABEINDAT'] ) is str:
+		#       data.at[i, 'LABEINDAT'] = data.at[i, 'LABEINDAT'].replace(' ', '')
+		#       data.at[i, 'LABEINDAT'] = data.at[i, 'LABEINDAT'].replace('.', '/')   
 
 		# Convert to datetime
-		data['VALIDIERTDAT'] = pd.to_datetime(data['VALIDIERTDAT'], dayfirst = True)
+		data['LABEINDAT'] = pd.to_datetime(data['LABEINDAT'], dayfirst = True)
 
 		# Add column only with info about day
-		data = data.assign(DAY=data['VALIDIERTDAT'].dt.strftime('%Y-%m-%d'))
+		data = data.assign(DAY=data['LABEINDAT'].dt.strftime('%Y-%m-%d'))
 		data['DAY'] = pd.to_datetime(data['DAY'], dayfirst = True)
 		# This way DAY contains datetime objects, but keeps only year, month and date forgetting about hour, minute and second
 		# ---------------------------------------------------------------------------------------------------
@@ -329,7 +332,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 			
 			for day in set(df_duplicated_reference_parameter.DAY):
 				df_duplicated_reference_parameter_day = df_duplicated_reference_parameter[ df_duplicated_reference_parameter.DAY == day ]
-				index_to_keep_reference = df_duplicated_reference_parameter_day['VALIDIERTDAT'].idxmin()
+				index_to_keep_reference = df_duplicated_reference_parameter_day['LABEINDAT'].idxmin()
 				#print()
 				#print(df_duplicated_reference_parameter_day)
 				for i in df_duplicated_reference_parameter_day.index:
@@ -340,7 +343,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		##############################################
 
 		# OPTION 1
-		#data.drop_duplicates( ['Parameter', 'VALIDIERTDAT'], keep = 'first', inplace = True, ignore_index = True  )
+		#data.drop_duplicates( ['Parameter', 'LABEINDAT'], keep = 'first', inplace = True, ignore_index = True  )
 		for p in set(data.BESCHREIBUNG):
 			#print(f'PERFORMING PARAMETER {p} WHILE REFERENCE IS {reference_parameter}\n')
 			df_specific_for_p = data.loc[ data.BESCHREIBUNG == p ]
@@ -361,7 +364,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 					#####
 					reference_df = data[ data.BESCHREIBUNG == reference_parameter ]
 					reference_df = reference_df[ reference_df.DAY == current_day ]
-					#reference_time = list(reference_df.VALIDIERTDAT)[0]
+					#reference_time = list(reference_df.LABEINDAT)[0]
 					# print()
 					# print('debug------------------')
 					# print(reference_df)
@@ -372,13 +375,13 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 					try:
 						# reference_df = data[ data.BESCHREIBUNG == reference_parameter ]
 						# reference_df = reference_df[ reference_df.DAY == current_day ]
-						reference_time = list(reference_df.VALIDIERTDAT)[0]
-						closest_time = find_nearest( df_duplicated_p_day.VALIDIERTDAT, reference_time )
-						index_to_keep = df_duplicated_p_day.index[df_duplicated_p_day['VALIDIERTDAT'] == closest_time].tolist()[0]
+						reference_time = list(reference_df.LABEINDAT)[0]
+						closest_time = find_nearest( df_duplicated_p_day.LABEINDAT, reference_time )
+						index_to_keep = df_duplicated_p_day.index[df_duplicated_p_day['LABEINDAT'] == closest_time].tolist()[0]
 						# print('Comparison done')
 						# print(f'reference_time: {reference_time}')
 					except:
-						index_to_keep = df_duplicated_p_day['VALIDIERTDAT'].idxmin()
+						index_to_keep = df_duplicated_p_day['LABEINDAT'].idxmin()
 					#     print('Just kept first')
 					# print(f'Index to keep: {index_to_keep}\n')
 
@@ -406,6 +409,8 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		# SWITCH THIS ON ONCE REAL DATA FOR DAY 0 IS AVAILABLE; NOW SIMULATE
 		#print('TAKING CORRECT DATE')
 		day0 = patients_map[ patients_map.PATIFALLNR == current_patient_PATIFALLNR//10 ].DAY0.iloc[0] #.strftime('%Y-%m-%d')
+		#print(day0)
+
 
 		# simulate day0 as day before day of first exam; to switch off once real data for time0 is available
 		#day0 = day_of_first_exam - timedelta(days = 1)
@@ -413,10 +418,11 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		day0_all_patients.append(day0)
 
 
-		# GETTING RID OF EXAMS DONE BEFORE DAY 0 and before november second 2021
+		# GETTING RID OF EXAMS DONE BEFORE DAY 0 and before november second 2021 and sort data by date
 		#print(day0)
 		data = data[ data.DAY >= day0 ]
 		data = data[ data.DAY >= initial_day_of_study ]
+		data.sort_values('DAY', inplace = True)
 		# END GETTING RID OF EXAMS DOBE BEFORE DAY 0
 
 	
@@ -434,7 +440,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 	   
 
 		# Get range of time in which exams are taken; not really used anywhere
-		day_first_exam, day_last_exam = min(data.VALIDIERTDAT), max(data.VALIDIERTDAT)
+		day_first_exam, day_last_exam = min(data.LABEINDAT), max(data.LABEINDAT)
 		exam_period = day_last_exam - day_first_exam
 		# print(exam_period)
 
@@ -463,7 +469,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		#       data.drop(parameter, axis = 0, inplace = True)
 
 
-		# data.sort_values(by=['VALIDIERTDAT'], inplace = True) 
+		# data.sort_values(by=['LABEINDAT'], inplace = True) 
 		# print(f'\nSorted by date \n {data}\n')
 
 		# Start building dictionary
@@ -480,10 +486,10 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		# def get_dates(parameter):
 		#   try:
 		#       # if there is more than one result
-		#       return list(data.loc[parameter].VALIDIERTDAT)
+		#       return list(data.loc[parameter].LABEINDAT)
 		#   except:
 		#       # if there is only one result
-		#       return [data.loc[parameter].VALIDIERTDAT]
+		#       return [data.loc[parameter].LABEINDAT]
 
 		def get_results(parameter):
 			return list(data[data.BESCHREIBUNG == parameter].ERGEBNIST)
@@ -518,8 +524,6 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		# Collect all results; here final dictionary still contains dates, and [0] gets rid of it
 		# patient_results = [ final_dictionary[p][0] for p in all_needed_parameters ]
 		# big_data.append(patient_results)
-
-
 
 		# Make dictionaries for multiple sheets
 		final_dictionary_without_dates = { k:v[0] for k,v in final_dictionary.items() }

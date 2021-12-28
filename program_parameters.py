@@ -7,10 +7,10 @@ empty_result = ''
 positive_result = '1'
 negative_result = ''
 num_max_days = 36
-sub_period_duration = 7
+sub_period_duration = 8
 keep_kein_material = 'y'
-reference_parameter = 'Albumin'
-#reference_parameter = 'Proenkephalin'
+#reference_parameter = 'Albumin'
+reference_parameter = 'Proenkephalin'
 
 
 #mode = 'test'
