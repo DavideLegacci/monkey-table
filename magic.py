@@ -99,28 +99,26 @@ if perform_merging_routine == 'y':
 	# 9-digit
 	patients_in_current_labresults_not_in_map = [p for p in patient_IDs_in_current_labresults if p//10 not in patient_IDs_in_patients_map]
 	if len(patients_in_current_labresults_not_in_map) > 0:
-		print('\nThese patients are NOT matched in patients map\n')
+		print('\nFor your information, These patients are NOT matched in patients map\n')
 		[print(p//10) for p in patients_in_current_labresults_not_in_map ]
 		print()
-		raise Exception('\n\nAdd these patients to patient map.\n')
 
 	# 9-digit
 	patients_in_map_but_number_missing = [ p for p in patient_IDs_in_current_labresults if patID2Num(p//10) == '']
 	if len(patients_in_map_but_number_missing) > 0:
-		print('\nThese PATIFALLNR patients are in patients map, but not associated to number\n')
+		print('\nFor your information, These PATIFALLNR patients are in patients map, but not associated to number\n')
 		[print(p//10) for p in patients_in_map_but_number_missing ]
 		print()
-		raise Exception('\n\nAdd a number to these patients in patient map.\n')
 
-	print('\n Generating lab results file for each patient...\n')
+	print('\n Generating lab results file for each patient in patients map...\n')
 
-	# patient is 9-digit identifier
-	for patient in tqdm(set(raw_df.PATIFALLNR)):
+	# patient is 8-digit identifier
+	for patient in tqdm(patient_IDs_in_patients_map):
 
 		# patient_number is rebecca identifer
-		patient_number = patID2Num(patient//10)
+		patient_number = patID2Num(patient)
 		
-		raw_df_patient = raw_df[raw_df.PATIFALLNR == patient]
+		raw_df_patient = raw_df[raw_df.PATIFALLNR//10 == patient]
 
 		filename = f'{patient_number}-{patient}.xlsx'
 		save_excel_patient_sheet(raw_df_patient, lab_results_directory, filename)
