@@ -15,6 +15,10 @@ from myutils import *
 ####################################################################################################################################################################################
 
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
+initial_day_of_study = datetime(2021, 11, 2)
+
+print(initial_day_of_study)
+print(j)
 
 #pd.set_option("display.max_rows", None, "display.max_columns", None)
 
@@ -413,9 +417,10 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		day0_all_patients.append(day0)
 
 
-		# GETTING RID OF EXAMS DONE BEFORE DAY 0
+		# GETTING RID OF EXAMS DONE BEFORE DAY 0 and before november second 2021
 		#print(day0)
 		data = data[ data.DAY >= day0 ]
+		data = data[ data.DAY >= initial_day_of_study ]
 		# END GETTING RID OF EXAMS DOBE BEFORE DAY 0
 
 	
@@ -427,6 +432,9 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 		if day0 > day_of_first_exam:
 			raise Exception(f'\nFor patient {patient} day 0 is {day0} but first exam is done on {day_of_first_exam}\n')
+
+		if day0 > initial_day_of_study:
+			raise Exception(f'\nFor patient {patient} day 0 is {day0} but initial day of study is {initial_day_of_study}\n')
 	   
 
 		# Get range of time in which exams are taken; not really used anywhere
