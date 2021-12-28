@@ -17,8 +17,6 @@ from myutils import *
 current_date = datetime.utcfromtimestamp( int(time.time()) ).strftime('%Y-%m-%d-%H_%M_%S')
 initial_day_of_study = datetime(2021, 11, 2)
 
-print(initial_day_of_study)
-print(j)
 
 #pd.set_option("display.max_rows", None, "display.max_columns", None)
 
@@ -433,7 +431,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		if day0 > day_of_first_exam:
 			raise Exception(f'\nFor patient {patient} day 0 is {day0} but first exam is done on {day_of_first_exam}\n')
 
-		if day0 > initial_day_of_study:
+		if day0 < initial_day_of_study:
 			raise Exception(f'\nFor patient {patient} day 0 is {day0} but initial day of study is {initial_day_of_study}\n')
 	   
 
