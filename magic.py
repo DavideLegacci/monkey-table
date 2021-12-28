@@ -307,9 +307,15 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('-', negative_result)
 				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('positiv', positive_result)
 				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('+', positive_result)
-		# END NON STANDARD RESULTS
 
-		data = data.astype({"ERGEBNIST": str})
+				#This converts results to float if possible
+				try:
+					data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace(',', '.')
+					data.at[i, 'ERGEBNIST'] = float(data.at[i, 'ERGEBNIST'])
+				except:
+					pass
+
+		# END NON STANDARD RESULTS
 
 		# START GETTING RID OF DUPLICATE EXAM 
 		# POSSIBILITIES:
@@ -332,14 +338,40 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 			
 			for day in set(df_duplicated_reference_parameter.DAY):
 				df_duplicated_reference_parameter_day = df_duplicated_reference_parameter[ df_duplicated_reference_parameter.DAY == day ]
-				index_to_keep_reference = df_duplicated_reference_parameter_day['LABEINDAT'].idxmin()
+
+				# print(df_duplicated_reference_parameter_day)
+				# print()
+				# print('---')
+				# for p in df_duplicated_reference_parameter_day.ERGEBNIST:
+				# 	print(p)
+				# 	print(type(p))
+				# print('---')
+
+				# Keep earlies numerical result, or earliest result if no result is a number
+				# https://stackoverflow.com/questions/50967231/pandas-select-rows-by-type-not-dtype
+				try:
+					index_to_keep_reference = df_duplicated_reference_parameter_day[df_duplicated_reference_parameter_day.ERGEBNIST.map(type)==float]['LABEINDAT'].idxmin()
+				except:
+					index_to_keep_reference = df_duplicated_reference_parameter_day['LABEINDAT'].idxmin()
+				#print(index_to_keep_reference)
+				#print()
+				#print(df_duplicated_reference_parameter_day[index_to_keep_reference])
 				#print()
 				#print(df_duplicated_reference_parameter_day)
 				for i in df_duplicated_reference_parameter_day.index:
 					if str(i) != str(index_to_keep_reference):
 						data.drop(i, inplace = True)
 			data.reset_index(inplace = True, drop = True)
-			#input(f'\n ---- ALERT----- \n\n Reference parameter {reference_parameter} appears more than once per day. Keeping first of each day. Enter to continue' )        
+			#input(f'\n ---- ALERT----- \n\n Reference parameter {reference_parameter} appears more than once per day. Keeping first of each day. Enter to continue' )
+
+		# Reconvert results to number like 3,4 rather than 3.4, so that excel is happy.. #-------------------------------------------------------------------------------------------
+		# Alternative: in Excel use dot as float separator https://www.officetooltips.com/excel_2016/tips/change_the_decimal_point_to_a_comma_or_vice_versa.html
+		for i in range(len(data.ERGEBNIST)):
+			if type( data.at[i, 'ERGEBNIST'] ) is float:
+				data.at[i, 'ERGEBNIST'] = str(data.at[i, 'ERGEBNIST'])
+				data.at[i, 'ERGEBNIST'] = data.at[i, 'ERGEBNIST'].replace('.', ',')
+
+
 		##############################################
 
 		# OPTION 1
