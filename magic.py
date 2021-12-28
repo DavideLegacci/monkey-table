@@ -400,7 +400,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		# 9-digit identifier
 		current_patient_PATIFALLNR = data['PATIFALLNR'][0]
 
-		day_of_first_exam = min(data.DAY)
+		
 
 
 		# SWITCH THIS ON ONCE REAL DATA FOR DAY 0 IS AVAILABLE; NOW SIMULATE
@@ -411,6 +411,14 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		#day0 = day_of_first_exam - timedelta(days = 1)
 
 		day0_all_patients.append(day0)
+
+
+		# GETTING RID OF EXAMS DONE BEFORE DAY 0
+		#print(day0)
+		data = data[ data.DAY >= day0 ]
+		# END GETTING RID OF EXAMS DOBE BEFORE DAY 0
+
+		day_of_first_exam = min(data.DAY)
 
 		if day0 > day_of_first_exam:
 			raise Exception(f'\nFor patient {patient} day 0 is {day0} but first exam is done on {day_of_first_exam}\n')
