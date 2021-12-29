@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import xarray as xr
 from tqdm import tqdm
+import sys
 
 from program_parameters import *
 from myutils import *
@@ -21,8 +22,30 @@ initial_day_of_study = datetime(2021, 11, 2)
 #pd.set_option("display.max_rows", None, "display.max_columns", None)
 
 nan_value = float("NaN")
+horizontal_line = '=' * os.get_terminal_size().columns
+
 ####################################################################################################################################################################################
 # END METADATA
+####################################################################################################################################################################################
+
+
+####################################################################################################################################################################################
+## START ARGPARSE
+####################################################################################################################################################################################
+
+verbose = False
+if '-v' in sys.argv:
+	verbose = True
+
+if verbose:
+	def verprint(data):
+		print(data)
+else:
+	def verprint(data):
+		pass
+
+####################################################################################################################################################################################
+## END ARGPARSE
 ####################################################################################################################################################################################
 
 
@@ -51,7 +74,6 @@ def patID2Num(ID):
 # START DATA MERGING ROUTINE
 # Goal: from multiple csv, each with data of multiple patients, get multiple excel files, each with all the data of a single patient
 ####################################################################################################################################################################################
-
 perform_merging_routine = ''
 while perform_merging_routine not in ['y', 'n']:
 	perform_merging_routine = input("\nPerform merging routine? Type y or n: ")
@@ -190,17 +212,22 @@ def dict_of_lists_to_list_of_dicts(dict_of_lists):
 	return [ dict(zip(dict_of_lists, i)) for i in zip(*dict_of_lists.values()) ]
 
 
-testing_parameters = ['Albumin', 'C-reaktives Protein (CRP)', 'GFR nach CKD-EPI']
-
+# START FIXING PARAMETERS NAMES
 # Real parameters are read from parameters.txt
-all_parameters_final = generate_parameters()
+all_needed_parameters = generate_parameters('parameters_directory/parameters.txt')
 
-if mode == 'full':
-	all_needed_parameters = all_parameters_final # first_29_parameters + new_17_parameters
+parameters_strange_characters_from_lab = generate_parameters('parameters_directory/parameters_strange_characters_from_lab.txt')
+parameters_strange_characters_from_lab_python = generate_parameters('parameters_directory/parameters_strange_characters_from_lab_python.txt')
 
-elif mode == 'test':
-	print('\n\n -------TEST MODE ------- \n\n')
-	all_needed_parameters = testing_parameters
+parameters_strange_characters_from_lab_corrected = generate_parameters('parameters_directory/parameters_strange_characters_from_lab_corrected.txt')
+
+parameters_correction_dictionary = dict_from_two_lists(parameters_strange_characters_from_lab, parameters_strange_characters_from_lab_corrected)
+parameters_correction_dictionary_python = dict_from_two_lists(parameters_strange_characters_from_lab_python, parameters_strange_characters_from_lab_corrected)
+
+# Acts in place; remove parameters with strange names with those with correct names
+replace_list_elements_by_dict(all_needed_parameters, parameters_correction_dictionary)
+
+# END FIXING PARAMETERS NAMES
 
 
 num_patients = 0
@@ -225,7 +252,8 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 		num_patients +=1
 
-		#print(f'processing patient {patient}...')
+		verprint(horizontal_line)
+		verprint(f'--> Processing patient {patient}...\n')
 
 		# START MERGING DATAFRAME
 		# Read data into two df
@@ -237,11 +265,19 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 		# Get rid of » symbol in indiced
 		# data.BESCHREIBUNG = data.BESCHREIBUNG.str.replace(' »', '')
 
+		# Replace weird german characters parameters names with normal ones
+
+		for i in range(len(data.BESCHREIBUNG)):
+			if data.at[i, 'BESCHREIBUNG'] in parameters_strange_characters_from_lab_python:
+				data.at[i, 'BESCHREIBUNG'] = parameters_correction_dictionary_python[data.at[i, 'BESCHREIBUNG']]
+
 		# IF INSTEAD PARAMETERS ARE VALUES OF COLUMN # <----------- MAIN DROP
 		# https://stackoverflow.com/questions/18172851/deleting-dataframe-row-in-pandas-based-on-column-value
+
+		# From labresults, drop parameters that are not needed
 		for param in data.BESCHREIBUNG:
 			if param not in all_needed_parameters:
-				#print(f'{param} being dropped \n')
+				verprint(f'{param} is in lab results, but is not one of the needed parameters, so I am dropping it \n')
 				data.drop(data.index[ data.BESCHREIBUNG == param ], inplace = True) 
 
 				# Should be allright without this
@@ -592,6 +628,10 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 		# contains 9-digit identifiers
 		patient_identifier_PATIFALLNR.append(current_patient_PATIFALLNR)
+
+
+		verprint(data)
+
 
 
 ####################################################################################################################################################################################

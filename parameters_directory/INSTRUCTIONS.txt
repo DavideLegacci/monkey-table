@@ -1,0 +1,7 @@
+- parameters.txt contains all the parameters you need, in the same order as they appear in your final sheet, exactly with the same characters as they appear in the lab results file
+
+- parameters_strange_characters_from_lab.txt contains only the parameters with strange characters, exactly with the same characters as they appear in the lab results file, in any order
+
+- parameters_strange_characters_from_lab_python.txt contains the same parameters of parameters_strange_characters_from_lab.txt, in the same order, with the strange characters as python reads them
+
+- parameters_strange_characters_from_lab_corrected.txt contains the same parameters of parameters_strange_characters_from_lab.txt, in the same order, with the strange characters replaced by "human" characters
