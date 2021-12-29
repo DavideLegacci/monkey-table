@@ -4,5 +4,4 @@ parameters
 lab_tmp
 .DS_Store
 */.DS_Store
-*/.gitkeep
 __pycache__
