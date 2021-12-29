@@ -25,6 +25,8 @@ initial_day_of_study = datetime(2021, 11, 2)
 
 nan_value = float("NaN")
 horizontal_line = '=' * os.get_terminal_size().columns
+horizontal_line_before_space = f'\n{horizontal_line}'
+horizontal_line_after_space = f'{horizontal_line}\n'
 
 log = logging.getLogger(__name__)
 
@@ -283,11 +285,24 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 			# Get rid of » symbol in indiced
 			# data.BESCHREIBUNG = data.BESCHREIBUNG.str.replace(' »', '')
 
+			# drop not needed columns
+			#not_needed_columns = ['AUFTRAGNR', 'GEBDAT', 'SEX', 'EINSCODE', 'LABEINDAT']
+			needed_columns = ['PATIFALLNR', 'BESCHREIBUNG', 'ERGEBNIST', 'LABEINDAT']
+			for col in data.columns:
+				if col not in needed_columns:
+					data.drop(col, axis = 1, inplace = True)
+
 			# Replace weird german characters parameters names with normal ones
+
+			verprint(horizontal_line_before_space)
+			verprint(f'Here is the data before renaming weird parameters: \n \n {data}')
 
 			for i in range(len(data.BESCHREIBUNG)):
 				if data.at[i, 'BESCHREIBUNG'] in parameters_strange_characters_from_lab_python:
 					data.at[i, 'BESCHREIBUNG'] = parameters_correction_dictionary_python[data.at[i, 'BESCHREIBUNG']]
+
+			verprint(f'Here is the data after renaming weird parameters: \n \n {data}')
+			verprint(horizontal_line_after_space)
 
 			# IF INSTEAD PARAMETERS ARE VALUES OF COLUMN # <----------- MAIN DROP
 			# https://stackoverflow.com/questions/18172851/deleting-dataframe-row-in-pandas-based-on-column-value
@@ -308,14 +323,11 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 			# Which is a mess because data.colum[i] refers to that index. So need to reset.
 			data.reset_index(inplace = True, drop = True)
 
+
+
 			# Now not needed parameters are dropped from data.BESCHREIBUNG. It may still happen that a needed parameter is not present in result. Fixed later. 
 
-			# drop not needed columns
-			#not_needed_columns = ['AUFTRAGNR', 'GEBDAT', 'SEX', 'EINSCODE', 'LABEINDAT']
-			needed_columns = ['PATIFALLNR', 'BESCHREIBUNG', 'ERGEBNIST', 'LABEINDAT']
-			for col in data.columns:
-				if col not in needed_columns:
-					data.drop(col, axis = 1, inplace = True)
+
 
 
 			# Fix dates format
@@ -648,7 +660,8 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 			patient_identifier_PATIFALLNR.append(current_patient_PATIFALLNR)
 
 
-			verprint(data)
+			verprint(horizontal_line_before_space)
+			verprint(f'\n Here is the final data for patient {patient}: \n\n {data} \n')
 
 		except:
 			print(horizontal_line)
