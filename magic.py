@@ -234,6 +234,7 @@ def dict_of_lists_to_list_of_dicts(dict_of_lists):
 # START FIXING PARAMETERS NAMES
 # Real parameters are read from parameters.txt
 all_needed_parameters = generate_parameters('parameters_directory/parameters.txt')
+verprint(f'\nHere are all needed parameters before fixing names: \n\n {all_needed_parameters}\n\n')
 
 parameters_strange_characters_from_lab = generate_parameters('parameters_directory/parameters_strange_characters_from_lab.txt')
 parameters_strange_characters_from_lab_python = generate_parameters('parameters_directory/parameters_strange_characters_from_lab_python.txt')
@@ -243,8 +244,10 @@ parameters_strange_characters_from_lab_corrected = generate_parameters('paramete
 parameters_correction_dictionary = dict_from_two_lists(parameters_strange_characters_from_lab, parameters_strange_characters_from_lab_corrected)
 parameters_correction_dictionary_python = dict_from_two_lists(parameters_strange_characters_from_lab_python, parameters_strange_characters_from_lab_corrected)
 
-# Acts in place; remove parameters with strange names with those with correct names
+# Acts in place; remove parameters with strange names from all needed parameters with those with correct names
+# The same procedure has to be done on the data, using parameters_correction_dictionary_python
 replace_list_elements_by_dict(all_needed_parameters, parameters_correction_dictionary)
+verprint(f'\nHere are all needed parameters after fixing names: \n\n {all_needed_parameters}\n\n')
 
 # END FIXING PARAMETERS NAMES
 
@@ -302,6 +305,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 					data.at[i, 'BESCHREIBUNG'] = parameters_correction_dictionary_python[data.at[i, 'BESCHREIBUNG']]
 
 			verprint(f'Here is the data after renaming weird parameters: \n \n {data}')
+			verprint('Things are ok if the names in all needed and in data AFTER CORRECTION match.')
 			verprint(horizontal_line_after_space)
 
 			# IF INSTEAD PARAMETERS ARE VALUES OF COLUMN # <----------- MAIN DROP

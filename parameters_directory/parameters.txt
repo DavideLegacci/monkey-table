@@ -15,13 +15,13 @@ Alkalische Phosphatase (AP)
 gamma-Glutamyltransferase (GGT)
 Bilirubin, gesamt
 Phosphat
-Gesamteiwei¤
+Gesamteiweiﬂ
 Albumin
 Procalcitonin (PCT), sensitiv
 C-reaktives Protein (CRP)
 Leukozyten
-H_moglobin (Hb)
-H_matokrit
+H‰moglobin (Hb)
+H‰matokrit
 Thrombozyten
 n-terminal pro-brain natriuretic peptide (NT-ProBNP)
 Troponin T (TNT), high sensitive im Plasma
@@ -33,9 +33,9 @@ Triglyceride
 Albumin im Urin / Kreatinin im Urin
 pH-Wert im Urin (Teststreifen)
 Nitrit im Urin (Teststreifen)
-Eiwei¤ im Urin (Teststreifen)
+Eiweiﬂ im Urin (Teststreifen)
 Glucose im Urin (Teststreifen)
-Ketonk_rper im Urin (Teststreifen)
+Ketonkˆrper im Urin (Teststreifen)
 Urobilinogen im Urin (Teststreifen)
 Bilirubin im Urin (Teststreifen)
 Bakterien im Urin/µl
@@ -45,9 +45,10 @@ Granulierte Zylinder/µl
 Plattenepithelien im Urin, absolut
 Hyaline Zylinder/µl
 Rundepithelien/µl
-Eiweiß im Urin / d
+Eiweiﬂ im Urin / d
 pH-Wert, arteriell
 Kohlendioxidpartialdruck (pCO2), arteriell
 Sauerstoffpartialdruck (pO2), arteriell
 Base Excess, arteriell
 Standard-Bicarbonat, arteriell
+Laktat
