@@ -177,7 +177,7 @@ if debug:
 
 	lab_results_directory = f'{directory_merged_results_per_patient_debug}/{name_of_directory_with_most_recent_results_debug}'   # one file per patient
 
-	print('\nDEBUG MODE ON\n')
+	print(red('\nDEBUG MODE ON\n'))
 
 ####################################################################################################################################################################################
 # END DATA MERGING ROUTINE
@@ -234,6 +234,7 @@ def dict_of_lists_to_list_of_dicts(dict_of_lists):
 # START FIXING PARAMETERS NAMES
 # Real parameters are read from parameters.txt
 all_needed_parameters = generate_parameters('parameters_directory/parameters.txt')
+all_needed_parameters_before_fixing_names = all_needed_parameters[:]
 verprint(f'\nHere are all needed parameters before fixing names: \n\n {all_needed_parameters}\n\n')
 
 parameters_strange_characters_from_lab = generate_parameters('parameters_directory/parameters_strange_characters_from_lab.txt')
@@ -247,7 +248,13 @@ parameters_correction_dictionary_python = dict_from_two_lists(parameters_strange
 # Acts in place; remove parameters with strange names from all needed parameters with those with correct names
 # The same procedure has to be done on the data, using parameters_correction_dictionary_python
 replace_list_elements_by_dict(all_needed_parameters, parameters_correction_dictionary)
-verprint(f'\nHere are all needed parameters after fixing names: \n\n {all_needed_parameters}\n\n')
+verprint('\nHere are all needed parameters before and after fixing names:\n')
+for i in range(len(all_needed_parameters_before_fixing_names)):
+	#if all_needed_parameters_before_fixing_names[i] in parameters_strange_characters_from_lab:
+	if all_needed_parameters_before_fixing_names[i] != all_needed_parameters[i]:
+		verprint(orange(f'{all_needed_parameters_before_fixing_names[i]} /// {all_needed_parameters[i]}'))
+	else:
+		verprint(f'{all_needed_parameters_before_fixing_names[i]} /// {all_needed_parameters[i]}')
 
 # END FIXING PARAMETERS NAMES
 
@@ -276,7 +283,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 			#num_patients +=1
 			verprint(f'\n{horizontal_line}')
 			verprint(horizontal_line)
-			verprint(f'--> Processing patient {patient}...\n')
+			verprint(orange(f'--> Processing patient {patient}...\n'))
 
 			# START MERGING DATAFRAME
 			# Read data into two df
@@ -314,7 +321,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 			# From labresults, drop parameters that are not needed
 			for param in data.BESCHREIBUNG:
 				if param not in all_needed_parameters:
-					verprint(f'{param} is in lab results, but is not one of the needed parameters, so I am dropping it \n')
+					verprint(red(f'{param} is in lab results, but is not one of the needed parameters, so I am dropping it \n'))
 					data.drop(data.index[ data.BESCHREIBUNG == param ], inplace = True) 
 
 					# Should be allright without this
@@ -570,7 +577,7 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 			# Check time period
 			if exam_period > pd.Timedelta(num_max_days, unit = 'd'):
-				print(f'\n\n-----------SOMETHING WRONG---------\n\n Exam period lasts {exam_period}, longer than {num_max_days} days\n----------\n')
+				print(red(f'\n\n-----------SOMETHING WRONG---------\n\n Exam period lasts {exam_period}, longer than {num_max_days} days\n----------\n'))
 				raise Exception
 
 			# Set maximal period of staying in the hospital; equal for everybody
@@ -669,16 +676,16 @@ for patient in tqdm( sorted(os.listdir(lab_results_directory), key=natsort) ):
 
 		except:
 			print(horizontal_line)
-			print(f'\n ------------>Error processing patient {patient}, so I skip it and continue with the others.\n To see the problem run the program again only on his/her file with the flag -debug.\n')
+			print(red(f'\n ------------>Error processing patient {patient}, so I skip it and continue with the others.\n To see the problem run the program again only on his/her file with the flag -debug.\n'))
 			if debug:
-				log.exception(f'\nHere is what goes wrong with patient {patient}:\n')
+				log.exception(orange(f'\nHere is what goes wrong with patient {patient}:\n'))
 			patients_with_error.append(patient)
 			print(horizontal_line)
 
 if not debug:
 	if len(patients_with_error) > 0:
 		print(horizontal_line)
-		print(f'Patients with errors: \n {patients_with_error}')
+		print(red(f'Patients with errors: \n {patients_with_error}'))
 		os.makedirs(lab_results_directory_debug, exist_ok=True)
 		for file in patients_with_error:
 		    shutil.copy(f'{lab_results_directory}/{file}', lab_results_directory_debug)
@@ -729,3 +736,10 @@ for s in tqdm(range(number_of_sheets)):
 print(f'\n{horizontal_line}')
 print('ALL GOOD :)')
 print(f'{horizontal_line}')
+if debug:
+	print(orange('The debug went fine! Now implement the corrections you did in the debug lab sheet into the main lab sheet, and run the program without the -debug flag.'))
+
+
+
+
+

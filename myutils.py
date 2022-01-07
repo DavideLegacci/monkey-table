@@ -23,4 +23,12 @@ def replace_list_elements_by_dict(mylist, mydict):
 def dict_from_two_lists(list_keys, list_values):
     return dict(zip(list_keys, list_values))
 
+def orange(text):
+    COLOR = '\033[93m'
+    END = '\033[0m'
+    return f'{COLOR}{text}{END}'
 
+def red(text):
+    COLOR = '\033[91m'
+    END = '\033[0m'
+    return f'{COLOR}{text}{END}'
