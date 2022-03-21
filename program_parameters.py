@@ -7,6 +7,7 @@ empty_result = ''
 positive_result = '1'
 negative_result = ''
 num_max_days = 36
+#num_max_days = 100
 sub_period_duration = 8
 keep_kein_material = 'y'
 #reference_parameter = 'Albumin'
